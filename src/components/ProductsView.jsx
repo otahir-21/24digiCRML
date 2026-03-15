@@ -3,8 +3,10 @@ import { DIET_TABS } from '../constants';
 import DataTable from './DataTable';
 import './ProductsView.css';
 
+const hasMultipleSources = DIET_TABS.length > 1;
+
 export default function ProductsView({ dataByTab, allData, loading, error, refetch }) {
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState(hasMultipleSources ? 'all' : (DIET_TABS[0]?.id ?? 'all'));
 
   const getDataForTab = () => {
     if (activeTab === 'all') return allData;
@@ -20,25 +22,27 @@ export default function ProductsView({ dataByTab, allData, loading, error, refet
 
   return (
     <div className="products-view">
-      <div className="products-tabs">
-        <button
-          className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
-          onClick={() => setActiveTab('all')}
-        >
-          All Products
-          <span className="tab-count">({getCount('all')})</span>
-        </button>
-        {DIET_TABS.map((tab) => (
+      {hasMultipleSources && (
+        <div className="products-tabs">
           <button
-            key={tab.id}
-            className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
-            onClick={() => setActiveTab(tab.id)}
+            className={`tab-btn ${activeTab === 'all' ? 'active' : ''}`}
+            onClick={() => setActiveTab('all')}
           >
-            {tab.label}
-            <span className="tab-count">({getCount(tab.id)})</span>
+            All Products
+            <span className="tab-count">({getCount('all')})</span>
           </button>
-        ))}
-      </div>
+          {DIET_TABS.map((tab) => (
+            <button
+              key={tab.id}
+              className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
+              onClick={() => setActiveTab(tab.id)}
+            >
+              {tab.label}
+              <span className="tab-count">({getCount(tab.id)})</span>
+            </button>
+          ))}
+        </div>
+      )}
 
       <div className="products-content">
         {error && <div className="content-error">{error}</div>}

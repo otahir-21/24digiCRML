@@ -1,51 +1,53 @@
 .products-view {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1rem;
 }
 
 .products-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  padding-bottom: 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
+  padding: 0.5rem 0 1rem;
+  border-bottom: 2px solid #e2e8f0;
 }
 
 .tab-btn {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.375rem;
   padding: 0.5rem 1rem;
-  background: #f8fafc;
+  background: #fff;
   border: 1px solid #e2e8f0;
   border-radius: 8px;
   color: #475569;
   font-size: 0.875rem;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
 }
 
 .tab-btn:hover {
-  background: #f1f5f9;
-  color: #1e293b;
+  background: #f8fafc;
   border-color: #cbd5e1;
+  color: #0f172a;
 }
 
 .tab-btn.active {
-  background: #2563eb;
-  border-color: #2563eb;
-  color: white;
+  background: #1e293b;
+  border-color: #1e293b;
+  color: #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 }
 
 .tab-count {
   font-size: 0.75rem;
-  opacity: 0.9;
+  opacity: 0.85;
 }
 
 .tab-btn.active .tab-count {
   opacity: 1;
+  color: rgba(255, 255, 255, 0.9);
 }
 
 .products-content {

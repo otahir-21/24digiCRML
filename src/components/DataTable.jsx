@@ -30,18 +30,24 @@ export default function DataTable({ data, collectionName, onUpdate }) {
             {data.map((row) => (
               <tr key={row.id}>
                 <td className="id-cell">{row.id}</td>
-                {columns.map((col) => (
-                  <td key={col}>
-                    {col.toLowerCase().includes('image') && row[col] ? (
-                      <div className="cell-image">
-                        <img src={row[col]} alt="" onError={(e) => e.target.style.display = 'none'} />
-                        <span className="image-url-truncate">{formatValue(row[col])}</span>
-                      </div>
-                    ) : (
-                      formatValue(row[col])
-                    )}
-                  </td>
-                ))}
+                {columns.map((col) => {
+                  const raw = formatValue(row[col]);
+                  const isLong = typeof raw === 'string' && raw.length > 80;
+                  return (
+                    <td key={col} className={isLong ? 'cell-truncate' : ''} title={isLong ? raw : undefined}>
+                      {col.toLowerCase().includes('image') && row[col] ? (
+                        <div className="cell-image">
+                          <img src={row[col]} alt="" onError={(e) => e.target.style.display = 'none'} />
+                          <span className="image-url-truncate">{raw}</span>
+                        </div>
+                      ) : isLong ? (
+                        <span className="cell-text-truncate">{raw}</span>
+                      ) : (
+                        raw
+                      )}
+                    </td>
+                  );
+                })}
                 {hasImageColumn && collectionName && (
                   <td className="td-actions">
                     <button

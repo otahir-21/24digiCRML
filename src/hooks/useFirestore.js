@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
-import { collection, getDocs } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase/config';
-import { DEFAULT_COLLECTIONS, DIET_COLLECTIONS } from '../constants';
+import { ALL_FIRESTORE_COLLECTION_IDS } from '../constants';
 
-const ALL_COLLECTIONS_TO_CHECK = [...DEFAULT_COLLECTIONS, ...DIET_COLLECTIONS];
+const ALL_COLLECTIONS_TO_CHECK = ALL_FIRESTORE_COLLECTION_IDS;
 
 export function useFirestoreCollections() {
   const [collections, setCollections] = useState([]);
@@ -74,4 +74,21 @@ export function useCollectionData(collectionName) {
   }, [fetchData]);
 
   return { data, loading, error, refetch: fetchData };
+}
+
+/**
+ * Add a document to a Firestore collection. Use SERVER_TIMESTAMP for createdAt/updatedAt.
+ * @param {string} collectionName
+ * @param {Record<string, unknown>} data - field values; use { createdAt: 'SERVER_TIMESTAMP' } for server time
+ * @returns {Promise<string>} new document ID
+ */
+export async function addDocument(collectionName, data) {
+  const sanitized = { ...data };
+  for (const key of Object.keys(sanitized)) {
+    if (sanitized[key] === 'SERVER_TIMESTAMP' || sanitized[key] === '__SERVER_TIMESTAMP__') {
+      sanitized[key] = serverTimestamp();
+    }
+  }
+  const ref = await addDoc(collection(db, collectionName), sanitized);
+  return ref.id;
 }

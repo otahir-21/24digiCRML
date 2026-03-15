@@ -36,7 +36,30 @@ export function isModuleCollection(name) {
 }
 
 const DISPLAY_NAME_OVERRIDES = {
+  // 24diet
   '24diet_products': 'Product Catalog',
+  '24diet_productaddons': 'Product Add-ons',
+  '24diet_productcategories': 'Product Categories',
+  // Challenge
+  challenge_participants: 'Participants',
+  challenge_rooms: 'Rooms',
+  room_requests: 'Room Requests',
+  challenge_leaderboard: 'Leaderboard',
+  challenge_activities: 'Activities',
+  // Shop
+  shop_categories: 'Categories',
+  shop_products: 'Products',
+  shop_cart: 'Cart',
+  shop_wishlist: 'Wishlist',
+  shop_orders: 'Orders',
+  product_reviews: 'Product Reviews',
+  // User & Profile
+  user_addresses: 'Addresses',
+  // AI & Meal Plan
+  ai_meal_plans: 'Meal Plans',
+  ai_delivery_schedule: 'Delivery Schedule',
+  // Delivery
+  delivery_partners: 'Partners',
 };
 
 /**
