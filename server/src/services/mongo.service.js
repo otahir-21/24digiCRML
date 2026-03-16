@@ -5,8 +5,8 @@ let client;
 async function connectMongo(uri) {
   if (!uri) {
     // eslint-disable-next-line no-console
-    console.warn('MongoDB: MONGODB_URI is not set. Skipping database connection.');
-    return { connected: false, reason: 'MONGODB_URI not set' };
+    console.warn('MongoDB: MONGODB_URI / MONGO_URI is not set. Skipping database connection.');
+    return { connected: false, reason: 'Mongo URI not set' };
   }
 
   try {
