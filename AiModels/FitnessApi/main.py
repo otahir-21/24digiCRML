@@ -11,7 +11,7 @@ from pydantic import BaseModel, Field
 
 from auth_firebase import require_firebase_user
 from coach_service import chat_coach, generate_daily_workout, generate_workout_plan
-from config import get_settings
+from config import get_settings, test_bearer_effective
 from firebase_app import firestore_available, init_firebase
 from store import get_user_state, merge_goals, merge_profile
 
@@ -88,14 +88,14 @@ def _context_from_user(uid: str) -> str:
 @app.get("/health")
 def health():
     s = get_settings()
-    test_on = bool((s.FITNESS_API_TEST_BEARER or "").strip())
     return {
         "status": "ok",
         "service": "fitness-api",
+        "environment": (s.FITNESS_API_ENV or "development").strip().lower(),
         "firebase_initialized": init_firebase(),
         "firestore": firestore_available(),
         "openai_configured": bool(s.OPENAI_API_KEY),
-        "test_bearer_auth_enabled": test_on,
+        "test_bearer_auth_enabled": test_bearer_effective(),
     }
 
 

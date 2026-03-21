@@ -5,7 +5,7 @@ from typing import Annotated, Optional
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from config import get_settings
+from config import get_settings, is_production
 from firebase_app import init_firebase
 
 security = HTTPBearer(auto_error=False)
@@ -41,7 +41,7 @@ async def require_firebase_user(
     token = credentials.credentials
     settings = get_settings()
     test_bearer = (settings.FITNESS_API_TEST_BEARER or "").strip()
-    if test_bearer:
+    if test_bearer and not is_production():
         try:
             if secrets.compare_digest(
                 token.encode("utf-8"),

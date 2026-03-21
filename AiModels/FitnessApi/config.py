@@ -26,10 +26,24 @@ class Settings(BaseSettings):
     # Synthetic Firebase uid used when FITNESS_API_TEST_BEARER matches (Firestore path)
     FITNESS_API_TEST_UID: str = "postman_test_user"
 
+    # Set to "production" on App Runner: test bearer is ignored; only real Firebase ID tokens work.
+    FITNESS_API_ENV: str = "development"
+
 
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
+
+
+def is_production() -> bool:
+    return (get_settings().FITNESS_API_ENV or "").strip().lower() == "production"
+
+
+def test_bearer_effective() -> bool:
+    """True only if test bearer is configured and allowed (not production)."""
+    if is_production():
+        return False
+    return bool((get_settings().FITNESS_API_TEST_BEARER or "").strip())
 
 
 def firebase_credentials_dict() -> Optional[dict]:
