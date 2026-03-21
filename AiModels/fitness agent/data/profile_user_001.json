@@ -1,0 +1,12 @@
+{
+  "age": 25,
+  "weight": 70,
+  "height": 170,
+  "fitness_level": "Beginner",
+  "injuries": "",
+  "experience": [
+    "Running"
+  ],
+  "bmi": 24.2,
+  "last_updated": "2025-08-06T22:18:54.095430"
+}
