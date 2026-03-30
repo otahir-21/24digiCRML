@@ -18,6 +18,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Zip must have package.json (and Procfile) at the *root* of the archive — not server/package.json.
       - name: Create deployment package
         run: |
           cd server
@@ -26,6 +27,15 @@ jobs:
             -x ".env*" \
             -x "*.log" \
             -x ".git/*"
+
+      - name: Verify EB bundle root layout
+        run: |
+          unzip -l api.zip | head -40
+          if ! zipinfo -1 api.zip | grep -qx 'package.json'; then
+            echo "ERROR: package.json must be at zip root, not inside a subfolder."
+            echo "Manual zip: cd server && zip -r ../api.zip ."
+            exit 1
+          fi
 
       - name: Deploy to Elastic Beanstalk
         uses: einaregilsson/beanstalk-deploy@master
