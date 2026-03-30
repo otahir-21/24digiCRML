@@ -8,6 +8,10 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', service: '24digi-node-backend', version: '1.0.0' });
+});
+
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: '24digi-node-backend' });
 });
