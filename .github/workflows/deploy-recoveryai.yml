@@ -4,6 +4,10 @@ on:
   push:
     branches:
       - main
+    paths:
+      - "AiModels/RecoveryAi/**"
+      - ".github/workflows/deploy-recoveryai.yml"
+  workflow_dispatch:
 
 env:
   AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
@@ -12,6 +16,8 @@ env:
 
 jobs:
   build-and-push:
+    # Without this secret the image tag is invalid (...ecr...amazonaws.com/:sha).
+    if: ${{ secrets.RECOVERYAI_ECR_REPOSITORY != '' }}
     runs-on: ubuntu-latest
 
     permissions:
