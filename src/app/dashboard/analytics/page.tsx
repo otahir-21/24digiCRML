@@ -832,8 +832,8 @@ export default function AnalyticsPage() {
                   nameKey="name"
                   height={300}
                   formatTooltip={(value, name) => [
-                    analyticsService.formatCurrency(typeof value === 'number' ? value : parseFloat(value)),
-                    name,
+                    analyticsService.formatCurrency(typeof value === 'number' ? value : parseFloat(value as string)),
+                    String(name),
                   ]}
                 />
               ) : (

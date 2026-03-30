@@ -171,7 +171,7 @@ export function ProductSection({ data, isLoading, onRefresh }: ProductSectionPro
                 value.toLocaleString(),
                 'Products'
               ]}
-              renderLabel={(entry) => `${(entry.percentage as number).toFixed(1)}%`}
+              renderLabel={(entry) => `${((entry.percent ?? 0) as number * 100).toFixed(1)}%`}
             />
           ) : (
             <div className="flex items-center justify-center h-[400px] text-muted-foreground">

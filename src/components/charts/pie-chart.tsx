@@ -8,6 +8,7 @@ import {
   Tooltip,
   Legend,
 } from "recharts";
+import type { PieLabelRenderProps } from "recharts";
 
 interface PieChartProps {
   data: Record<string, unknown>[];
@@ -18,8 +19,8 @@ interface PieChartProps {
   showLegend?: boolean;
   innerRadius?: number;
   outerRadius?: number;
-  formatTooltip?: (value: number | string, name: string) => [string, string];
-  renderLabel?: (entry: Record<string, unknown>) => string;
+  formatTooltip?: (value: number | string, name: string | number) => [string, string];
+  renderLabel?: (entry: PieLabelRenderProps) => string;
 }
 
 const defaultColors = [
@@ -62,7 +63,7 @@ export function PieChart({
           ))}
         </Pie>
         <Tooltip
-          formatter={formatTooltip}
+          formatter={formatTooltip ? (value, name) => formatTooltip(value as number | string, name as string | number) : undefined}
           contentStyle={{
             backgroundColor: "white",
             border: "1px solid #e2e8f0",

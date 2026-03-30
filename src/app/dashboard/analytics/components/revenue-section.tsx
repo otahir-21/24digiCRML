@@ -189,10 +189,10 @@ export function RevenueSection({ data, isLoading, onExport, onRefresh }: Revenue
               nameKey="name"
               height={350}
               formatTooltip={(value, name) => [
-                analyticsService.formatCurrency(typeof value === 'number' ? value : parseFloat(value)),
-                name
+                analyticsService.formatCurrency(typeof value === 'number' ? value : parseFloat(value as string)),
+                String(name)
               ]}
-              renderLabel={(entry) => `${(entry.percentage as number).toFixed(1)}%`}
+              renderLabel={(entry) => `${((entry.percent ?? 0) as number * 100).toFixed(1)}%`}
             />
           ) : (
             <div className="flex items-center justify-center h-[350px] text-muted-foreground">

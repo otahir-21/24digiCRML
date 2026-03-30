@@ -242,8 +242,8 @@ export function UserSection({ data, isLoading, onRefresh }: UserSectionProps) {
               dataKey="value"
               nameKey="name"
               height={350}
-              formatTooltip={(value, name) => [value.toLocaleString(), name]}
-              renderLabel={(entry) => `${(entry.percentage as number).toFixed(1)}%`}
+              formatTooltip={(value, name) => [value.toLocaleString(), String(name)]}
+              renderLabel={(entry) => `${((entry.percent ?? 0) as number * 100).toFixed(1)}%`}
             />
           ) : (
             <div className="flex items-center justify-center h-[350px] text-muted-foreground">

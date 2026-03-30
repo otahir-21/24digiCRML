@@ -20,7 +20,7 @@ interface AreaChartProps {
   showGrid?: boolean;
   showLegend?: boolean;
   stacked?: boolean;
-  formatTooltip?: (value: number | string, name: string) => [string, string];
+  formatTooltip?: (value: number | string, name: string | number) => [string, string];
   formatXAxis?: (value: number | string) => string;
   formatYAxis?: (value: number | string) => string;
 }
@@ -62,7 +62,7 @@ export function AreaChart({
           className="text-sm fill-gray-500 dark:fill-gray-400"
         />
         <Tooltip
-          formatter={formatTooltip}
+          formatter={formatTooltip ? (value, name) => formatTooltip(value as number | string, name as string | number) : undefined}
           contentStyle={{
             backgroundColor: 'white',
             border: '1px solid #e2e8f0',
