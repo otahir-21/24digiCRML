@@ -1,3 +1,16 @@
+# Deploy Node API from /server to AWS Elastic Beanstalk.
+#
+# Repository secrets (Settings → Secrets and variables → Actions):
+#   AWS_ACCESS_KEY_ID
+#   AWS_SECRET_ACCESS_KEY
+#   EB_APPLICATION_NAME     e.g. 24DIGIDashboard
+#   EB_ENVIRONMENT_NAME     e.g. 24DIGIDashboard-env
+# Optional:
+#   AWS_REGION              default: ap-south-1 (Mumbai; change if your EB env is elsewhere)
+#
+# IAM: allow elasticbeanstalk:* for the app/env, s3:GetObject on EB buckets, and
+# typically elasticbeanstalk:UpdateEnvironment, CreateApplicationVersion, etc.
+
 name: Deploy API to Elastic Beanstalk
 
 on:
@@ -7,6 +20,11 @@ on:
     paths:
       - "server/**"
       - ".github/workflows/deploy-api-eb.yml"
+  workflow_dispatch:
+
+concurrency:
+  group: elastic-beanstalk-api-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -18,7 +36,24 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Zip must have package.json (and Procfile) at the *root* of the archive — not server/package.json.
+      - name: Validate required secrets
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          EB_APPLICATION_NAME: ${{ secrets.EB_APPLICATION_NAME }}
+          EB_ENVIRONMENT_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
+        run: |
+          missing=0
+          for var in AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY EB_APPLICATION_NAME EB_ENVIRONMENT_NAME; do
+            eval "v=\$$var"
+            if [ -z "$v" ]; then
+              echo "::error::Repository secret $var is not set. Add it under Settings → Secrets and variables → Actions."
+              missing=1
+            fi
+          done
+          exit "$missing"
+
+      # Zip must have package.json and Procfile at the *root* of the archive — not server/package.json.
       - name: Create deployment package
         run: |
           cd server
@@ -33,19 +68,18 @@ jobs:
           unzip -l api.zip | head -40
           if ! zipinfo -1 api.zip | grep -qx 'package.json'; then
             echo "ERROR: package.json must be at zip root, not inside a subfolder."
-            echo "Manual zip: cd server && zip -r ../api.zip ."
+            echo "From repo root: cd server && zip -r ../api.zip ."
             exit 1
           fi
 
       - name: Deploy to Elastic Beanstalk
-        uses: einaregilsson/beanstalk-deploy@master
+        uses: einaregilsson/beanstalk-deploy@v22
         with:
           aws_access_key: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws_secret_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          region: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
           application_name: ${{ secrets.EB_APPLICATION_NAME }}
           environment_name: ${{ secrets.EB_ENVIRONMENT_NAME }}
           version_label: api-${{ github.sha }}
           deployment_package: api.zip
           wait_for_deployment: true
-
