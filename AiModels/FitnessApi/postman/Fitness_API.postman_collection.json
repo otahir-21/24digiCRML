@@ -1,0 +1,114 @@
+{
+  "info": {
+    "name": "Fitness API (App Runner)",
+    "description": "Set collection variable **bearer_token** to either:\n- A real **Firebase ID token**, or\n- The same value as server env **FITNESS_API_TEST_BEARER** (when that env var is set on App Runner).\n\nCheck **GET /health** → `test_bearer_auth_enabled: true` means test token is active.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    { "key": "base_url", "value": "https://jyrxbrkpwg.ap-south-1.awsapprunner.com" },
+    { "key": "bearer_token", "value": "PASTE_FIREBASE_ID_TOKEN_OR_TEST_BEARER" }
+  ],
+  "item": [
+    {
+      "name": "Health (no auth)",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/health"
+      }
+    },
+    {
+      "name": "OpenAPI JSON",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": "{{base_url}}/openapi.json"
+      }
+    },
+    {
+      "name": "Me",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}", "type": "text" }
+        ],
+        "url": "{{base_url}}/me"
+      }
+    },
+    {
+      "name": "Put profile",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"age\": 30,\n  \"weight_kg\": 75,\n  \"height_cm\": 178,\n  \"fitness_level\": \"intermediate\",\n  \"sex\": \"male\"\n}"
+        },
+        "url": "{{base_url}}/profile"
+      }
+    },
+    {
+      "name": "Put goals",
+      "request": {
+        "method": "PUT",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"goals\": \"Lose fat and improve 5k time\",\n  \"sport_preference\": \"running\"\n}"
+        },
+        "url": "{{base_url}}/goals"
+      }
+    },
+    {
+      "name": "Generate plan",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sport\": \"running\",\n  \"goal\": \"complete a 10K\",\n  \"weeks\": 4,\n  \"level\": \"beginner\"\n}"
+        },
+        "url": "{{base_url}}/plans/generate"
+      }
+    },
+    {
+      "name": "Daily workout",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"sport\": \"running\",\n  \"duration_minutes\": 30,\n  \"difficulty\": \"intermediate\"\n}"
+        },
+        "url": "{{base_url}}/workouts/daily"
+      }
+    },
+    {
+      "name": "Coach chat",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{bearer_token}}", "type": "text" },
+          { "key": "Content-Type", "value": "application/json", "type": "text" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"message\": \"How should I warm up before a 5K?\",\n  \"context\": \"\"\n}"
+        },
+        "url": "{{base_url}}/coach/chat"
+      }
+    }
+  ]
+}

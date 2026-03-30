@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "migrate:mongo": "node scripts/migrate-mongo-to-firebase.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.1",
