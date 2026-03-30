@@ -64,7 +64,10 @@ interface GameFeatureData {
   requirements?: string[];
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000';
+// Use relative URL so browser requests go through Next.js rewrites (proxy).
+// This avoids Mixed Content errors when the app is on HTTPS but the backend
+// is HTTP. The rewrite in next.config.ts forwards /v1/... → backendUrl/v1/...
+const API_URL = '';
 const CLIENT_ID = process.env.NEXT_PUBLIC_CLIENT_ID;
 const CLIENT_SECRET = process.env.NEXT_PUBLIC_CLIENT_SECRET;
 
