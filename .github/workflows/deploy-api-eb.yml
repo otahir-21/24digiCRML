@@ -81,6 +81,7 @@ jobs:
           region: ${{ secrets.AWS_REGION || 'ap-south-1' }}
           application_name: ${{ env.EB_APPLICATION_NAME }}
           environment_name: ${{ env.EB_ENVIRONMENT_NAME }}
-          version_label: api-${{ github.sha }}
+          version_label: api-${{ github.sha }}-${{ github.run_attempt }}
+          use_existing_version_if_available: true
           deployment_package: api.zip
           wait_for_deployment: true
