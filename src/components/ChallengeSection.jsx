@@ -32,6 +32,16 @@ function fmtAED(n) {
 function fmtPts(n) {
   return n !== undefined && n !== null ? `${Number(n).toLocaleString()} pts` : '—';
 }
+function fmtNumber(n) {
+  if (n === undefined || n === null || n === '') return '—';
+  const v = Number(n);
+  return Number.isFinite(v) ? v.toLocaleString() : String(n);
+}
+function fmtKm(n) {
+  if (n === undefined || n === null || n === '') return '—';
+  const v = Number(n);
+  return Number.isFinite(v) ? `${v.toFixed(2)} km` : String(n);
+}
 
 const COMP_STATUSES   = ['UPCOMING', 'ACTIVE', 'COMPLETED', 'CANCELLED'];
 const ROOM_STATUSES   = ['LOBBY', 'ACTIVE', 'ENDED'];
@@ -418,19 +428,82 @@ function RoomsTab() {
 
 // ─── Leaderboard ──────────────────────────────────────────────────────────────
 function LeaderboardTab() {
-  const { data, loading, refetch } = useCollectionData('global_leaderboard');
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [sport, setSport] = useState('ALL');
+  const [minSteps, setMinSteps] = useState('');
+  const [minCalories, setMinCalories] = useState('');
+  const [minDistance, setMinDistance] = useState('');
 
-  const sports = ['ALL', ...new Set(data.map((r) => r.sport_type).filter(Boolean))];
-  const rows = sport === 'ALL' ? data : data.filter((r) => r.sport_type === sport);
-  const sorted = [...rows].sort((a, b) => (Number(b.total_points) || 0) - (Number(a.total_points) || 0));
+  const refetch = useCallback(async () => {
+    setLoading(true);
+    try {
+      const snap = await getDocs(collection(db, 'bracelet_sync'));
+      const rows = snap.docs.map((d) => {
+        const raw = d.data();
+        const sessions = Array.isArray(raw.activity_sessions) ? raw.activity_sessions : [];
+        const fallbackSession = sessions.length > 0 ? [] : [{
+          steps: raw.steps ?? 0,
+          calories: raw.calories ?? 0,
+          distance_km: raw.distance_km ?? raw.distance_raw ?? 0,
+          active_minutes: raw.active_minutes ?? 0,
+          sport_name: raw.sport_name ?? '',
+          date: raw.date ?? raw.day_key ?? null,
+        }];
+        const allSessions = [...sessions, ...fallbackSession];
+        const totals = allSessions.reduce((acc, s) => ({
+          steps: acc.steps + (Number(s.steps) || 0),
+          calories: acc.calories + (Number(s.calories) || 0),
+          distanceKm: acc.distanceKm + (Number(s.distance_km ?? s.distance_raw) || 0),
+          activeMinutes: acc.activeMinutes + (Number(s.active_minutes) || 0),
+        }), { steps: 0, calories: 0, distanceKm: 0, activeMinutes: 0 });
+        const sports = [...new Set(allSessions.map((s) => s.sport_name).filter(Boolean))];
+        const latestDate = allSessions
+          .map((s) => s.date || s.day_key)
+          .filter(Boolean)
+          .sort()
+          .at(-1) || null;
+        return {
+          id: d.id,
+          user_id: raw.user_id || d.id,
+          sport_type: sports[0] || '—',
+          sports,
+          total_steps: totals.steps,
+          total_calories: totals.calories,
+          total_distance_km: totals.distanceKm,
+          active_minutes: totals.activeMinutes,
+          latest_date: latestDate,
+        };
+      });
+      setData(rows);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    refetch();
+  }, [refetch]);
+
+  const sports = ['ALL', ...new Set(data.flatMap((r) => r.sports || []).filter(Boolean))];
+  const rows = data.filter((r) => {
+    if (sport !== 'ALL' && !(r.sports || []).includes(sport)) return false;
+    if (minSteps !== '' && (Number(r.total_steps) || 0) < Number(minSteps)) return false;
+    if (minCalories !== '' && (Number(r.total_calories) || 0) < Number(minCalories)) return false;
+    if (minDistance !== '' && (Number(r.total_distance_km) || 0) < Number(minDistance)) return false;
+    return true;
+  });
+  const sorted = [...rows].sort((a, b) => (Number(b.total_steps) || 0) - (Number(a.total_steps) || 0));
 
   const cols = [
     { label: '#',           render: (_, i) => i + 1 },
-    { label: 'User',        render: (r) => r.display_name || r.user_id || r.id },
-    { label: 'Sport',       key: 'sport_type' },
-    { label: 'Total Points',render: (r) => fmtPts(r.total_points) },
-    { label: 'Competitions',key: 'competitions_joined' },
+    { label: 'User',        render: (r) => r.user_id || r.id },
+    { label: 'Sport',       render: (r) => (r.sports || []).join(', ') || r.sport_type },
+    { label: 'Steps',       render: (r) => fmtNumber(r.total_steps) },
+    { label: 'Calories',    render: (r) => fmtNumber(r.total_calories) },
+    { label: 'Distance',    render: (r) => fmtKm(r.total_distance_km) },
+    { label: 'Active Mins', render: (r) => fmtNumber(r.active_minutes) },
+    { label: 'Last Sync',   render: (r) => fmtDateShort(r.latest_date) },
   ];
 
   return (
@@ -444,6 +517,31 @@ function LeaderboardTab() {
           <select className="cs-filter-select" value={sport} onChange={(e) => setSport(e.target.value)}>
             {sports.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
+          <input
+            className="cs-filter-select"
+            type="number"
+            placeholder="Min Steps"
+            value={minSteps}
+            onChange={(e) => setMinSteps(e.target.value)}
+            style={{ minWidth: 110 }}
+          />
+          <input
+            className="cs-filter-select"
+            type="number"
+            placeholder="Min Calories"
+            value={minCalories}
+            onChange={(e) => setMinCalories(e.target.value)}
+            style={{ minWidth: 120 }}
+          />
+          <input
+            className="cs-filter-select"
+            type="number"
+            step="0.01"
+            placeholder="Min Distance (km)"
+            value={minDistance}
+            onChange={(e) => setMinDistance(e.target.value)}
+            style={{ minWidth: 150 }}
+          />
           <button className="cs-btn-secondary" onClick={refetch}>Refresh</button>
         </div>
       </div>
@@ -628,8 +726,12 @@ const TABS = [
   { id: 'config',         label: 'App Config' },
 ];
 
-export default function ChallengeSection() {
-  const [tab, setTab] = useState('overview');
+export default function ChallengeSection({ initialTab = 'overview' }) {
+  const [tab, setTab] = useState(initialTab);
+
+  useEffect(() => {
+    setTab(initialTab);
+  }, [initialTab]);
 
   return (
     <div className="cs-root">

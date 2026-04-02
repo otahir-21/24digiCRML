@@ -1,13 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
+import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase/config';
 import { useCollectionData } from '../hooks/useFirestore';
+import { useAuth } from '../context/AuthContext';
+import { ROUTES } from '../constants';
 import { CHALLENGE_COLLECTION_IDS } from '../constants';
 import DashboardHeader from './DashboardHeader';
 import DataTable from './DataTable';
 import AddDocumentModal from './AddDocumentModal';
 import FirestoreSetupHelp from './FirestoreSetupHelp';
 import ChallengeSection from './ChallengeSection';
+import UsersAdminPanel from './UsersAdminPanel';
+import FoodCategoriesPanel from './FoodCategoriesPanel';
+import ProductsPanel from './ProductsPanel';
+import AddonsPanel from './AddonsPanel';
+import GameFeaturesPanel from './GameFeaturesPanel';
 import './Dashboard.css';
 
 // ─── Navigation sections ───────────────────────────────────────────────────
@@ -15,6 +23,9 @@ const SECTION = {
   DASHBOARD: 'dashboard',
   PROFILE: 'profile',
   DIET: 'diet',
+  PRODUCTS: 'products',
+  ADDONS: 'addons',
+  GAME_FEATURES: 'game_features',
   CHALLENGE: 'challenge',
 };
 
@@ -301,46 +312,95 @@ function CollectionView({ collectionName, displayName, addDocLabel }) {
 
 // ─── 24Diet view with sub-screen tabs ─────────────────────────────────────
 function DietView() {
-  const [activeScreen, setActiveScreen] = useState(DIET_SCREENS[0].id);
-  const screen = DIET_SCREENS.find((s) => s.id === activeScreen);
-
-  return (
-    <div>
-      <div className="sub-tabs">
-        {DIET_SCREENS.map((s) => (
-          <button
-            key={s.id}
-            className={`sub-tab-btn ${activeScreen === s.id ? 'active' : ''}`}
-            onClick={() => setActiveScreen(s.id)}
-          >
-            <span className="sub-tab-icon">{s.icon}</span>
-            {s.label}
-          </button>
-        ))}
-      </div>
-      <CollectionView
-        key={activeScreen}
-        collectionName={activeScreen}
-        displayName={screen.label}
-        addDocLabel={screen.label}
-      />
-    </div>
-  );
+  return <FoodCategoriesPanel />;
 }
 
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
 export default function Dashboard() {
   const [section, setSection] = useState(SECTION.DASHBOARD);
-  const [dietExpanded, setDietExpanded] = useState(true);
+  const [challengeInitialTab, setChallengeInitialTab] = useState('overview');
   const [setupHelpOpen, setSetupHelpOpen] = useState(false);
+  const { user, signOut } = useAuth();
+  const navigate = useNavigate();
 
-  const navItems = [
-    { id: SECTION.DASHBOARD, label: 'Dashboard', icon: ICONS.dashboard },
-    { id: SECTION.PROFILE, label: 'Profile', icon: ICONS.profile },
-    { id: SECTION.DIET, label: '24Diet', icon: ICONS.diet, expandable: true },
-    { id: SECTION.CHALLENGE, label: '24Challenge', icon: ICONS.challenge },
+  const sidebarSections = [
+    {
+      id: 'main',
+      label: '',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, section: SECTION.DASHBOARD },
+        { id: 'users', label: 'Users', icon: ICONS.profile, section: SECTION.PROFILE },
+        { id: 'create-admin', label: 'Create Admin/Staff', icon: ICONS.profile },
+        { id: 'admin-users', label: 'Admin Users', icon: ICONS.profile },
+      ],
+    },
+    {
+      id: 'commerce',
+      label: '',
+      items: [
+        { id: 'food-categories', label: 'Food Categories', icon: ICONS.diet, section: SECTION.DIET },
+        { id: 'products', label: 'Products', icon: ICONS.diet, section: SECTION.PRODUCTS },
+        { id: 'addons', label: 'Add-ons', icon: ICONS.diet, section: SECTION.ADDONS },
+        { id: 'meal-components', label: 'Meal Component Templates', icon: ICONS.diet },
+        { id: 'orders', label: 'Orders', icon: ICONS.dashboard },
+        { id: 'challenges', label: 'Challenges', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'overview' },
+        { id: 'competitions', label: 'Competitions', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'competitions' },
+        { id: 'rooms', label: 'Rooms', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'rooms' },
+        { id: 'game-features', label: 'Game Features', icon: ICONS.challenge, section: SECTION.GAME_FEATURES },
+      ],
+    },
+    {
+      id: 'ai',
+      label: 'C BY AI',
+      items: [
+        { id: 'subscription-packages', label: 'Subscription Packages', icon: ICONS.diet },
+        { id: 'subscribers', label: 'Subscribers', icon: ICONS.profile },
+        { id: 'ai-meal-deliveries', label: 'AI Meal Deliveries', icon: ICONS.diet },
+        { id: 'meal-preparations', label: 'Meal Preparations', icon: ICONS.diet },
+      ],
+    },
+    {
+      id: 'bracelet',
+      label: 'BRACELA HEALTH',
+      items: [
+        { id: 'health-reads', label: 'Health Reads', icon: ICONS.dashboard },
+      ],
+    },
+    {
+      id: 'bracelet-store',
+      label: 'BRACELET STORE',
+      items: [
+        { id: 'bracelet-products', label: 'Bracelet Products', icon: ICONS.dashboard },
+      ],
+    },
   ];
+
+  const activeMenuId = (() => {
+    if (section === SECTION.DIET) return 'food-categories';
+    if (section === SECTION.PRODUCTS) return 'products';
+    if (section === SECTION.ADDONS) return 'addons';
+    if (section === SECTION.GAME_FEATURES) return 'game-features';
+    if (section === SECTION.PROFILE) return 'users';
+    if (section === SECTION.CHALLENGE && challengeInitialTab === 'competitions') return 'competitions';
+    if (section === SECTION.CHALLENGE && challengeInitialTab === 'rooms') return 'rooms';
+    if (section === SECTION.CHALLENGE) return 'challenges';
+    return 'dashboard';
+  })();
+
+  const onMenuClick = (item) => {
+    if (item.section) {
+      setSection(item.section);
+      if (item.section === SECTION.CHALLENGE) {
+        setChallengeInitialTab(item.challengeTab || 'overview');
+      }
+    }
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate(ROUTES.LOGIN);
+  };
 
   return (
     <div className="dashboard">
@@ -350,68 +410,58 @@ export default function Dashboard() {
         {/* ── Sidebar ── */}
         <aside className="sidebar">
           <div className="sidebar-brand">
-            <span className="brand-logo">24</span>
-            <span className="brand-name">Digi CRM</span>
+            <span className="brand-logo">◈</span>
+            <span className="brand-name">Admin Panel</span>
           </div>
 
           <nav className="sidebar-nav">
-            <ul className="collection-list">
-              {navItems.map((item) => (
-                <li key={item.id}>
-                  <button
-                    className={`collection-btn ${section === item.id ? 'active' : ''}`}
-                    onClick={() => {
-                      setSection(item.id);
-                      if (item.expandable) setDietExpanded((v) => section === item.id ? !v : true);
-                    }}
-                  >
-                    <span className="nav-icon">{item.icon}</span>
-                    <span className="nav-label">{item.label}</span>
-                    {item.expandable && (
-                      <span className="nav-chevron">
-                        {section === SECTION.DIET && dietExpanded ? '▾' : '▸'}
-                      </span>
-                    )}
-                  </button>
-
-                  {/* 24Diet sub-items */}
-                  {item.expandable && section === SECTION.DIET && dietExpanded && (
-                    <ul className="module-items">
-                      {DIET_SCREENS.map((s) => (
-                        <li key={s.id}>
-                          <span className="sub-item-indicator">
-                            <span className="nav-icon">{s.icon}</span>
-                            {s.label}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
-            </ul>
+            {sidebarSections.map((group) => (
+              <div key={group.id} className="sidebar-group">
+                {group.label && <div className="sidebar-group-title">{group.label}</div>}
+                <ul className="collection-list">
+                  {group.items.map((item) => (
+                    <li key={item.id}>
+                      <button
+                        className={`collection-btn ${activeMenuId === item.id ? 'active' : ''} ${!item.section ? 'muted' : ''}`}
+                        onClick={() => onMenuClick(item)}
+                        type="button"
+                      >
+                        <span className="nav-icon">{item.icon}</span>
+                        <span className="nav-label">{item.label}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </nav>
 
           <div className="sidebar-footer">
-            <button type="button" className="setup-help-btn" onClick={() => setSetupHelpOpen(true)}>
-              Firestore setup help
-            </button>
+            <div className="sidebar-user-meta">
+              <div className="sidebar-user-email">Logged in as:</div>
+              <div className="sidebar-user-value">{user?.email || 'admin@24digi.com'}</div>
+              <div className="sidebar-user-role">Admin</div>
+            </div>
+            <div className="sidebar-footer-actions">
+              <button type="button" className="setup-help-btn" onClick={() => setSetupHelpOpen(true)}>
+                Setup
+              </button>
+              <button type="button" className="sidebar-logout-btn" onClick={handleSignOut}>
+                Logout
+              </button>
+            </div>
           </div>
         </aside>
 
         {/* ── Content ── */}
         <section className="content">
           {section === SECTION.DASHBOARD && <DashboardOverview />}
-          {section === SECTION.PROFILE && (
-            <CollectionView
-              key="users"
-              collectionName="users"
-              displayName="User Profiles"
-              addDocLabel="User"
-            />
-          )}
+          {section === SECTION.PROFILE && <UsersAdminPanel />}
           {section === SECTION.DIET && <DietView />}
-          {section === SECTION.CHALLENGE && <ChallengeSection />}
+          {section === SECTION.PRODUCTS && <ProductsPanel />}
+          {section === SECTION.ADDONS && <AddonsPanel />}
+          {section === SECTION.GAME_FEATURES && <GameFeaturesPanel />}
+          {section === SECTION.CHALLENGE && <ChallengeSection initialTab={challengeInitialTab} />}
         </section>
       </main>
 

@@ -1,0 +1,136 @@
+.fc-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+}
+
+.fc-page-title {
+  font-size: 1.32rem;
+  font-weight: 700;
+}
+
+.fc-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.9rem;
+}
+
+.fc-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.6rem;
+}
+
+.fc-top h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.fc-actions {
+  display: flex;
+  gap: 0.45rem;
+}
+
+.fc-btn {
+  border: 1px solid #dbe1ea;
+  background: #fff;
+  color: #334155;
+  border-radius: 7px;
+  padding: 0.36rem 0.7rem;
+  font-size: 0.76rem;
+  cursor: pointer;
+}
+
+.fc-btn.dark {
+  background: #0f172a;
+  color: #fff;
+  border-color: #0f172a;
+}
+
+.fc-search-row {
+  margin-bottom: 0.7rem;
+}
+
+.fc-search {
+  width: 100%;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.52rem 0.68rem;
+  font-size: 0.82rem;
+}
+
+.fc-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  margin-bottom: 0.6rem;
+  font-size: 0.8rem;
+}
+
+.fc-loading,
+.fc-empty {
+  text-align: center;
+  color: #64748b;
+  padding: 0.9rem;
+}
+
+.fc-table-wrap {
+  overflow-x: auto;
+}
+
+.fc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8rem;
+}
+
+.fc-table th,
+.fc-table td {
+  border-bottom: 1px solid #edf2f7;
+  text-align: left;
+  padding: 0.55rem 0.55rem;
+}
+
+.fc-table thead th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+}
+
+.fc-thumb {
+  width: 24px;
+  height: 24px;
+  object-fit: cover;
+  border-radius: 4px;
+}
+
+.fc-no-image {
+  color: #94a3b8;
+}
+
+.fc-status {
+  display: inline-flex;
+  padding: 0.12rem 0.42rem;
+  border-radius: 999px;
+  background: #111827;
+  color: #fff;
+  font-size: 0.67rem;
+}
+
+.fc-action-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  margin-right: 0.28rem;
+  font-size: 0.66rem;
+  color: #334155;
+}
