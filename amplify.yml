@@ -1,7 +1,11 @@
 # AWS Amplify — Vite SPA (`npm run build` → dist/).
-# `next` must stay in devDependencies so Hosting does not treat this repo as
-# Next.js SSR (which expects required-server-files.json in the artifact).
-# If deploy still fails, run: aws amplify update-app --app-id <id> --platform WEB --region <r>
+# Keep `next` in devDependencies so new apps are less likely to be classified as SSR.
+#
+# If deploy fails with: Can't find required-server-files.json — the Amplify *app*
+# is still platform WEB_COMPUTE (Next SSR). Flip it once to static WEB (Mumbai = ap-south-1).
+# App id is the subdomain: https://main.<APP_ID>.amplifyapp.com
+#   aws amplify update-app --app-id d37pv8m7knz797 --platform WEB --region ap-south-1
+# Then trigger a new deployment on branch main.
 version: 1
 frontend:
   phases:
