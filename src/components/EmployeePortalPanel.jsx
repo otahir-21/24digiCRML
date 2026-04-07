@@ -1,12 +1,22 @@
 import { useAuth } from '../context/AuthContext';
 import './EmployeePortalPanel.css';
 
+function safeDecodeSlug(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '—';
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 /**
  * Home view for /employee/:slug — scoped workspace for staff (Auth + crm_employees).
  */
 export default function EmployeePortalPanel({ slug }) {
   const { user } = useAuth();
-  const displaySlug = slug ? decodeURIComponent(slug) : '—';
+  const displaySlug = safeDecodeSlug(slug);
   const firstName =
     user?.displayName?.trim()?.split(/\s+/)[0] ||
     user?.email?.split('@')[0] ||

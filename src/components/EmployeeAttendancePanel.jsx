@@ -25,6 +25,16 @@ import {
 } from '../utils/dubaiAttendance';
 import './EmployeeAttendancePanel.css';
 
+function safeDecodeSlug(value) {
+  const raw = String(value || '').trim();
+  if (!raw) return '';
+  try {
+    return decodeURIComponent(raw);
+  } catch {
+    return raw;
+  }
+}
+
 function requestGeoPosition() {
   return new Promise((resolve, reject) => {
     if (!navigator?.geolocation) {
@@ -116,7 +126,7 @@ function todayTimelineLabel(record) {
 
 export default function EmployeeAttendancePanel({ slug }) {
   const { user } = useAuth();
-  const displaySlug = slug ? decodeURIComponent(slug) : '';
+  const displaySlug = safeDecodeSlug(slug);
 
   const [dateKey, setDateKey] = useState(() => dubaiCalendarDateKey());
   const [settings, setSettings] = useState({
