@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { collection, getDocs } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase/config';
@@ -21,6 +21,7 @@ import EmployeePortalPanel from './EmployeePortalPanel';
 import EmployeeAttendancePanel from './EmployeeAttendancePanel';
 import AttendanceAdminPanel from './AttendanceAdminPanel';
 import StaffEmployeesPanel from './StaffEmployeesPanel';
+import { useCrmStaffAccess } from '../hooks/useCrmStaffAccess';
 import './Dashboard.css';
 
 // ─── Navigation sections ───────────────────────────────────────────────────
@@ -113,21 +114,22 @@ const ICONS = {
   ),
 };
 
-/** Full owner/admin sidebar — used when not under /employee/:slug */
+/** `crmModule` must match keys in `CRM_ACCESS_MODULES` / crm_employees.crmAllowedModules */
 function buildOwnerSidebarSections() {
   return [
     {
       id: 'main',
       label: '',
       items: [
-        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, section: SECTION.DASHBOARD },
-        { id: 'users', label: 'Users', icon: ICONS.profile, section: SECTION.PROFILE },
+        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, section: SECTION.DASHBOARD, crmModule: 'dashboard' },
+        { id: 'users', label: 'Users', icon: ICONS.profile, section: SECTION.PROFILE, crmModule: 'users' },
         {
           id: 'create-admin',
           label: 'Create Admin/Staff',
           icon: ICONS.profile,
           section: SECTION.STAFF_EMPLOYEES,
           staffTab: 'create',
+          crmModule: 'staff_employees',
         },
         {
           id: 'admin-users',
@@ -135,12 +137,14 @@ function buildOwnerSidebarSections() {
           icon: ICONS.profile,
           section: SECTION.STAFF_EMPLOYEES,
           staffTab: 'list',
+          crmModule: 'staff_employees',
         },
         {
           id: 'attendance-admin',
           label: 'Attendance',
           icon: ICONS.attendance,
           section: SECTION.ATTENDANCE_ADMIN,
+          crmModule: 'attendance_admin',
         },
       ],
     },
@@ -148,42 +152,148 @@ function buildOwnerSidebarSections() {
       id: 'commerce',
       label: '',
       items: [
-        { id: 'food-categories', label: 'Food Categories', icon: ICONS.diet, section: SECTION.DIET },
-        { id: 'products', label: 'Products', icon: ICONS.diet, section: SECTION.PRODUCTS },
-        { id: 'addons', label: 'Add-ons', icon: ICONS.diet, section: SECTION.ADDONS },
-        { id: 'meal-components', label: 'Meal Component Templates', icon: ICONS.diet },
-        { id: 'orders', label: 'Orders', icon: ICONS.dashboard },
-        { id: 'challenges', label: 'Challenges', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'overview' },
-        { id: 'competitions', label: 'Competitions', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'competitions' },
-        { id: 'rooms', label: 'Rooms', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'rooms' },
-        { id: 'game-features', label: 'Game Features', icon: ICONS.challenge, section: SECTION.GAME_FEATURES },
+        { id: 'food-categories', label: 'Food Categories', icon: ICONS.diet, section: SECTION.DIET, crmModule: 'diet' },
+        { id: 'products', label: 'Products', icon: ICONS.diet, section: SECTION.PRODUCTS, crmModule: 'products' },
+        { id: 'addons', label: 'Add-ons', icon: ICONS.diet, section: SECTION.ADDONS, crmModule: 'addons' },
+        { id: 'meal-components', label: 'Meal Component Templates', icon: ICONS.diet, crmModule: 'meal-components' },
+        { id: 'orders', label: 'Orders', icon: ICONS.dashboard, crmModule: 'orders' },
+        {
+          id: 'challenges',
+          label: 'Challenges',
+          icon: ICONS.challenge,
+          section: SECTION.CHALLENGE,
+          challengeTab: 'overview',
+          crmModule: 'challenge',
+        },
+        {
+          id: 'competitions',
+          label: 'Competitions',
+          icon: ICONS.challenge,
+          section: SECTION.CHALLENGE,
+          challengeTab: 'competitions',
+          crmModule: 'challenge',
+        },
+        {
+          id: 'rooms',
+          label: 'Rooms',
+          icon: ICONS.challenge,
+          section: SECTION.CHALLENGE,
+          challengeTab: 'rooms',
+          crmModule: 'challenge',
+        },
+        {
+          id: 'game-features',
+          label: 'Game Features',
+          icon: ICONS.challenge,
+          section: SECTION.GAME_FEATURES,
+          crmModule: 'game_features',
+        },
       ],
     },
     {
       id: 'ai',
       label: 'C BY AI',
       items: [
-        { id: 'subscription-packages', label: 'Subscription Packages', icon: ICONS.diet },
-        { id: 'subscribers', label: 'Subscribers', icon: ICONS.profile },
-        { id: 'ai-meal-deliveries', label: 'AI Meal Deliveries', icon: ICONS.diet, section: SECTION.CBY_AI_DELIVERY },
-        { id: 'meal-preparations', label: 'Meal Preparations', icon: ICONS.diet },
+        { id: 'subscription-packages', label: 'Subscription Packages', icon: ICONS.diet, crmModule: 'subscription-packages' },
+        { id: 'subscribers', label: 'Subscribers', icon: ICONS.profile, crmModule: 'subscribers' },
+        {
+          id: 'ai-meal-deliveries',
+          label: 'AI Meal Deliveries',
+          icon: ICONS.diet,
+          section: SECTION.CBY_AI_DELIVERY,
+          crmModule: 'cby_ai_delivery',
+        },
+        { id: 'meal-preparations', label: 'Meal Preparations', icon: ICONS.diet, crmModule: 'meal-preparations' },
       ],
     },
     {
       id: 'bracelet',
       label: 'BRACELA HEALTH',
       items: [
-        { id: 'health-reads', label: 'Health Reads', icon: ICONS.dashboard },
+        { id: 'health-reads', label: 'Health Reads', icon: ICONS.dashboard, crmModule: 'health-reads' },
       ],
     },
     {
       id: 'bracelet-store',
       label: 'BRACELET STORE',
       items: [
-        { id: 'bracelet-products', label: 'Bracelet Products', icon: ICONS.dashboard },
+        { id: 'bracelet-products', label: 'Bracelet Products', icon: ICONS.dashboard, crmModule: 'bracelet-products' },
       ],
     },
   ];
+}
+
+function filterSidebarByCrmAccess(sections, canSee) {
+  return sections
+    .map((g) => ({
+      ...g,
+      items: g.items.filter((item) => canSee(item.crmModule)),
+    }))
+    .filter((g) => g.items.length > 0);
+}
+
+function sectionToCrmModule(section) {
+  switch (section) {
+    case SECTION.DASHBOARD:
+      return 'dashboard';
+    case SECTION.PROFILE:
+      return 'users';
+    case SECTION.DIET:
+      return 'diet';
+    case SECTION.PRODUCTS:
+      return 'products';
+    case SECTION.ADDONS:
+      return 'addons';
+    case SECTION.GAME_FEATURES:
+      return 'game_features';
+    case SECTION.CHALLENGE:
+      return 'challenge';
+    case SECTION.CBY_AI_DELIVERY:
+      return 'cby_ai_delivery';
+    case SECTION.STAFF_EMPLOYEES:
+      return 'staff_employees';
+    case SECTION.ATTENDANCE_ADMIN:
+      return 'attendance_admin';
+    default:
+      return 'dashboard';
+  }
+}
+
+function pickDefaultFromFilteredSidebar(filteredSections) {
+  for (const g of filteredSections) {
+    for (const item of g.items) {
+      if (item.section) {
+        return {
+          section: item.section,
+          challengeTab: item.challengeTab || 'overview',
+          staffTab: item.staffTab || 'create',
+        };
+      }
+    }
+  }
+  return { section: SECTION.DASHBOARD, challengeTab: 'overview', staffTab: 'create' };
+}
+
+function CrmAccessDenied() {
+  return (
+    <div className="crm-access-denied">
+      <h2 className="crm-access-denied-title">Access restricted</h2>
+      <p className="crm-access-denied-text">
+        You don’t have permission to open this area. Ask an owner to update your modules under{' '}
+        <strong>Staff → Directory</strong> (CRM access).
+      </p>
+    </div>
+  );
+}
+
+function GuardedOwnerPanel({ canSee, accessLoading, moduleKey, children }) {
+  if (accessLoading) {
+    return <div className="content-loading">Loading permissions…</div>;
+  }
+  if (!canSee(moduleKey)) {
+    return <CrmAccessDenied />;
+  }
+  return children;
 }
 
 /** Minimal sidebar for /employee/:slug — add Attendance etc. here later */
@@ -426,8 +536,24 @@ export default function Dashboard({ employeeSlug = null }) {
   const [setupHelpOpen, setSetupHelpOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { loading: accessLoading, hasFullAccess, staffRole, canSee } = useCrmStaffAccess();
 
-  const sidebarSections = employeeSlug ? buildEmployeeSidebarSections() : buildOwnerSidebarSections();
+  const ownerSidebarBase = useMemo(() => buildOwnerSidebarSections(), []);
+  const ownerSidebarFiltered = useMemo(() => {
+    if (employeeSlug) return ownerSidebarBase;
+    return filterSidebarByCrmAccess(ownerSidebarBase, canSee);
+  }, [employeeSlug, ownerSidebarBase, canSee]);
+
+  const sidebarSections = employeeSlug ? buildEmployeeSidebarSections() : ownerSidebarFiltered;
+
+  useEffect(() => {
+    if (employeeSlug || accessLoading) return;
+    if (canSee(sectionToCrmModule(section))) return;
+    const next = pickDefaultFromFilteredSidebar(ownerSidebarFiltered);
+    setSection(next.section);
+    setChallengeInitialTab(next.challengeTab);
+    setStaffInitialTab(next.staffTab);
+  }, [employeeSlug, accessLoading, section, canSee, ownerSidebarFiltered]);
 
   const activeMenuId = (() => {
     if (employeeSlug) {
@@ -524,7 +650,11 @@ export default function Dashboard({ employeeSlug = null }) {
               <div className="sidebar-user-email">{isEmployeePortal ? 'Your account' : 'Logged in as'}</div>
               <div className="sidebar-user-value">{user?.email ?? '—'}</div>
               <div className={`sidebar-user-role ${isEmployeePortal ? 'sidebar-user-role--employee' : ''}`}>
-                {isEmployeePortal ? 'Employee' : 'Administrator'}
+                {isEmployeePortal
+                  ? 'Employee'
+                  : staffRole === 'staff_admin' && !hasFullAccess
+                    ? 'Staff (limited)'
+                    : 'Administrator'}
               </div>
             </div>
             <div
@@ -544,22 +674,60 @@ export default function Dashboard({ employeeSlug = null }) {
 
         {/* ── Content ── */}
         <section className="content">
-          {section === SECTION.DASHBOARD && !employeeSlug && <DashboardOverview />}
+          {section === SECTION.DASHBOARD && !employeeSlug && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="dashboard">
+              <DashboardOverview />
+            </GuardedOwnerPanel>
+          )}
           {section === SECTION.DASHBOARD && employeeSlug && <EmployeePortalPanel slug={employeeSlug} />}
           {employeeSlug && section === SECTION.EMPLOYEE_ATTENDANCE && (
             <EmployeeAttendancePanel slug={employeeSlug} />
           )}
-          {!employeeSlug && section === SECTION.PROFILE && <UsersAdminPanel />}
-          {!employeeSlug && section === SECTION.DIET && <DietView />}
-          {!employeeSlug && section === SECTION.PRODUCTS && <ProductsPanel />}
-          {!employeeSlug && section === SECTION.ADDONS && <AddonsPanel />}
-          {!employeeSlug && section === SECTION.GAME_FEATURES && <GameFeaturesPanel />}
-          {!employeeSlug && section === SECTION.CHALLENGE && <ChallengeSection initialTab={challengeInitialTab} />}
-          {!employeeSlug && section === SECTION.CBY_AI_DELIVERY && <CByAiDeliveryPanel />}
-          {!employeeSlug && section === SECTION.STAFF_EMPLOYEES && (
-            <StaffEmployeesPanel initialTab={staffInitialTab} />
+          {!employeeSlug && section === SECTION.PROFILE && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="users">
+              <UsersAdminPanel />
+            </GuardedOwnerPanel>
           )}
-          {!employeeSlug && section === SECTION.ATTENDANCE_ADMIN && <AttendanceAdminPanel />}
+          {!employeeSlug && section === SECTION.DIET && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="diet">
+              <DietView />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.PRODUCTS && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="products">
+              <ProductsPanel />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.ADDONS && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="addons">
+              <AddonsPanel />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.GAME_FEATURES && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="game_features">
+              <GameFeaturesPanel />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.CHALLENGE && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="challenge">
+              <ChallengeSection initialTab={challengeInitialTab} />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.CBY_AI_DELIVERY && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="cby_ai_delivery">
+              <CByAiDeliveryPanel />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.STAFF_EMPLOYEES && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="staff_employees">
+              <StaffEmployeesPanel initialTab={staffInitialTab} />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.ATTENDANCE_ADMIN && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="attendance_admin">
+              <AttendanceAdminPanel />
+            </GuardedOwnerPanel>
+          )}
         </section>
       </main>
 

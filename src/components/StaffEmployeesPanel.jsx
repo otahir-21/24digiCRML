@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   createUserWithEmailAndPassword,
   signOut,
@@ -11,14 +11,24 @@ import {
   doc,
   setDoc,
   updateDoc,
+  deleteField,
   serverTimestamp,
   query,
   where,
   limit,
 } from 'firebase/firestore';
 import { auth, db, getSecondaryAuth } from '../firebase/config';
-import { CRM_EMPLOYEES_COLLECTION, employeePortalPath, ROUTES } from '../constants';
+import {
+  CRM_EMPLOYEES_COLLECTION,
+  CRM_ACCESS_MODULES,
+  CRM_ACCESS_MODULE_ALL,
+  buildCrmAllowedModulesForSave,
+  crmStaffHasFullAccess,
+  employeePortalPath,
+  ROUTES,
+} from '../constants';
 import { useAuth } from '../context/AuthContext';
+import { useCrmStaffAccess } from '../hooks/useCrmStaffAccess';
 import './StaffEmployeesPanel.css';
 
 /** Strong throwaway password if admin leaves password blank (employee sets real password via email link). */
@@ -185,6 +195,9 @@ function StaffSuccessNotice({ info }) {
 
 export default function StaffEmployeesPanel({ initialTab = 'create' }) {
   const { user: adminUser } = useAuth();
+  const { hasFullAccess: editorHasFullCrmAccess } = useCrmStaffAccess();
+  const allModuleKeys = useMemo(() => CRM_ACCESS_MODULES.map((m) => m.key), []);
+
   const [tab, setTab] = useState(initialTab);
   const [rows, setRows] = useState([]);
   const [loadingList, setLoadingList] = useState(false);
@@ -202,6 +215,16 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
   const [resendingForEmail, setResendingForEmail] = useState(null);
   const [duplicateEmailHelp, setDuplicateEmailHelp] = useState(false);
   const [loadingSetupOnly, setLoadingSetupOnly] = useState(false);
+
+  const [staffCrmFullAccess, setStaffCrmFullAccess] = useState(true);
+  const [staffCrmSelected, setStaffCrmSelected] = useState(
+    () => new Set(CRM_ACCESS_MODULES.map((m) => m.key)),
+  );
+
+  const [accessModalRow, setAccessModalRow] = useState(null);
+  const [accessModalFull, setAccessModalFull] = useState(true);
+  const [accessModalSelected, setAccessModalSelected] = useState(() => new Set());
+  const [accessModalSaving, setAccessModalSaving] = useState(false);
 
   useEffect(() => {
     setTab(initialTab);
@@ -242,6 +265,66 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
     setRole('employee');
     setPortalSlugTouched(false);
     setSendSetupEmail(true);
+    setStaffCrmFullAccess(true);
+    setStaffCrmSelected(new Set(CRM_ACCESS_MODULES.map((m) => m.key)));
+  };
+
+  const openCrmAccessModal = (row) => {
+    if (String(row?.role || '').toLowerCase() !== 'staff_admin') return;
+    const full = crmStaffHasFullAccess(row.crmAllowedModules);
+    setAccessModalRow(row);
+    setAccessModalFull(full);
+    if (full) {
+      setAccessModalSelected(new Set(allModuleKeys));
+    } else {
+      const raw = Array.isArray(row.crmAllowedModules) ? row.crmAllowedModules : [];
+      const s = new Set(raw.filter((k) => allModuleKeys.includes(k)));
+      if (!s.has('dashboard')) s.add('dashboard');
+      setAccessModalSelected(s);
+    }
+  };
+
+  const saveCrmAccessModal = async () => {
+    if (!accessModalRow?.id) return;
+    setAccessModalSaving(true);
+    setError('');
+    try {
+      const modules = buildCrmAllowedModulesForSave([...accessModalSelected], accessModalFull);
+      await updateDoc(doc(db, CRM_EMPLOYEES_COLLECTION, accessModalRow.id), {
+        crmAllowedModules: modules,
+        crmAccessUpdatedAt: serverTimestamp(),
+        crmAccessUpdatedBy: adminUser?.email || null,
+      });
+      setAccessModalRow(null);
+      loadList();
+    } catch (e) {
+      setError(e.message || 'Could not save CRM access.');
+    } finally {
+      setAccessModalSaving(false);
+    }
+  };
+
+  const toggleStaffCrmKey = (key, inForm) => {
+    if (key === 'dashboard') return;
+    if (inForm) {
+      setStaffCrmFullAccess(false);
+      setStaffCrmSelected((prev) => {
+        const n = new Set(prev);
+        if (n.has(key)) n.delete(key);
+        else n.add(key);
+        if (!n.has('dashboard')) n.add('dashboard');
+        return n;
+      });
+    } else {
+      setAccessModalFull(false);
+      setAccessModalSelected((prev) => {
+        const n = new Set(prev);
+        if (n.has(key)) n.delete(key);
+        else n.add(key);
+        if (!n.has('dashboard')) n.add('dashboard');
+        return n;
+      });
+    }
   };
 
   const handleResendSetup = async (row) => {
@@ -291,6 +374,13 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
       await updateProfile(cred.user, { displayName: fullName.trim() });
 
       try {
+        const crmMods =
+          role === 'staff_admin'
+            ? editorHasFullCrmAccess
+              ? buildCrmAllowedModulesForSave([...staffCrmSelected], staffCrmFullAccess)
+              : [CRM_ACCESS_MODULE_ALL]
+            : null;
+
         await setDoc(doc(db, CRM_EMPLOYEES_COLLECTION, cred.user.uid), {
           uid: cred.user.uid,
           email: email.trim().toLowerCase(),
@@ -302,6 +392,7 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
           createdByUid: adminUser?.uid || null,
           createdByEmail: adminUser?.email || null,
           onboardingViaEmail: sendSetupEmail,
+          ...(role === 'staff_admin' ? { crmAllowedModules: crmMods } : { crmAllowedModules: deleteField() }),
         });
       } catch (fsErr) {
         try {
@@ -485,11 +576,68 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
             </label>
             <label className="sep-label">
               Role
-              <select className="sep-input" value={role} onChange={(e) => setRole(e.target.value)}>
-                <option value="employee">Employee (portal only when you add permissions)</option>
-                <option value="staff_admin">Staff admin (treat as elevated; wire modules later)</option>
+              <select
+                className="sep-input"
+                value={role}
+                onChange={(e) => {
+                  setRole(e.target.value);
+                  if (e.target.value === 'staff_admin') {
+                    setStaffCrmFullAccess(true);
+                    setStaffCrmSelected(new Set(CRM_ACCESS_MODULES.map((m) => m.key)));
+                  }
+                }}
+              >
+                <option value="employee">Employee (workspace portal)</option>
+                <option value="staff_admin">Staff admin (signs in to this CRM)</option>
               </select>
             </label>
+
+            {role === 'staff_admin' && editorHasFullCrmAccess && (
+              <div className="sep-crm-access">
+                <p className="sep-crm-access-title">CRM modules for this staff admin</p>
+                <p className="sep-crm-access-hint">
+                  Choose which sidebar areas they see. <strong>Dashboard</strong> is always on for partial access.
+                  Trusted users only for <strong>Staff / employees</strong> — they can create accounts.
+                </p>
+                <label className="sep-check">
+                  <input
+                    type="checkbox"
+                    checked={staffCrmFullAccess}
+                    onChange={(e) => {
+                      const on = e.target.checked;
+                      setStaffCrmFullAccess(on);
+                      if (on) {
+                        setStaffCrmSelected(new Set(CRM_ACCESS_MODULES.map((m) => m.key)));
+                      }
+                    }}
+                  />
+                  <span>Full CRM (all modules — same as owner)</span>
+                </label>
+                {!staffCrmFullAccess && (
+                  <div className="sep-crm-grid">
+                    {CRM_ACCESS_MODULES.map((m) => (
+                      <label key={m.key} className="sep-crm-item">
+                        <input
+                          type="checkbox"
+                          checked={staffCrmSelected.has(m.key)}
+                          disabled={m.key === 'dashboard'}
+                          onChange={() => toggleStaffCrmKey(m.key, true)}
+                        />
+                        <span>{m.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {role === 'staff_admin' && !editorHasFullCrmAccess && (
+              <p className="sep-hint sep-hint--crm">
+                You have limited CRM access: new staff admins are created with <strong>full CRM</strong>. Ask an owner
+                to narrow their modules in Directory → CRM access.
+              </p>
+            )}
+
             <button type="submit" className="sep-submit" disabled={loadingSubmit}>
               {loadingSubmit ? 'Creating…' : 'Create account'}
             </button>
@@ -528,6 +676,7 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
                     <th>Portal</th>
                     <th>Active</th>
                     <th>Invite</th>
+                    {editorHasFullCrmAccess && <th>CRM access</th>}
                   </tr>
                 </thead>
                 <tbody>
@@ -558,12 +707,72 @@ export default function StaffEmployeesPanel({ initialTab = 'create' }) {
                           {resendingForEmail === r.email ? 'Sending…' : 'Resend setup email'}
                         </button>
                       </td>
+                      {editorHasFullCrmAccess && (
+                        <td>
+                          {String(r.role || '').toLowerCase() === 'staff_admin' ? (
+                            <button type="button" className="sep-btn-small" onClick={() => openCrmAccessModal(r)}>
+                              Edit
+                            </button>
+                          ) : (
+                            <span className="sep-muted">—</span>
+                          )}
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
               </table>
             </div>
           )}
+        </div>
+      )}
+
+      {accessModalRow && (
+        <div className="sep-modal-backdrop" role="presentation" onClick={() => !accessModalSaving && setAccessModalRow(null)}>
+          <div className="sep-modal" role="dialog" aria-labelledby="sep-access-title" onClick={(e) => e.stopPropagation()}>
+            <h3 id="sep-access-title" className="sep-modal-title">
+              CRM access — {accessModalRow.fullName || accessModalRow.email}
+            </h3>
+            <p className="sep-modal-sub">
+              Controls which areas this staff admin sees in the main CRM sidebar. Dashboard stays on for any partial
+              list.
+            </p>
+            <label className="sep-check">
+              <input
+                type="checkbox"
+                checked={accessModalFull}
+                onChange={(e) => {
+                  const on = e.target.checked;
+                  setAccessModalFull(on);
+                  if (on) setAccessModalSelected(new Set(allModuleKeys));
+                }}
+              />
+              <span>Full CRM</span>
+            </label>
+            {!accessModalFull && (
+              <div className="sep-crm-grid sep-crm-grid--modal">
+                {CRM_ACCESS_MODULES.map((m) => (
+                  <label key={m.key} className="sep-crm-item">
+                    <input
+                      type="checkbox"
+                      checked={accessModalSelected.has(m.key)}
+                      disabled={m.key === 'dashboard'}
+                      onChange={() => toggleStaffCrmKey(m.key, false)}
+                    />
+                    <span>{m.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+            <div className="sep-modal-actions">
+              <button type="button" className="sep-btn-small" disabled={accessModalSaving} onClick={() => setAccessModalRow(null)}>
+                Cancel
+              </button>
+              <button type="button" className="sep-submit" disabled={accessModalSaving} onClick={saveCrmAccessModal}>
+                {accessModalSaving ? 'Saving…' : 'Save'}
+              </button>
+            </div>
+          </div>
         </div>
       )}
     </div>

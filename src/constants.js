@@ -53,6 +53,56 @@ export function parseEmployeeSlugFromLoginNext(path) {
 /** Firestore: staff / employees created from admin CRM (document id = Auth uid). */
 export const CRM_EMPLOYEES_COLLECTION = 'crm_employees';
 
+/**
+ * Staff admins (`role: staff_admin`) use `crmAllowedModules`: `['*']` = entire CRM, or a list of keys below.
+ * Missing / null field = full access (legacy). Employees (`role: employee`) use the portal only; this field is cleared.
+ */
+export const CRM_ACCESS_MODULE_ALL = '*';
+
+export const CRM_ACCESS_MODULES = [
+  { key: 'dashboard', label: 'Dashboard overview' },
+  { key: 'users', label: 'Users' },
+  { key: 'staff_employees', label: 'Staff / employees' },
+  { key: 'attendance_admin', label: 'Attendance (admin)' },
+  { key: 'diet', label: 'Food categories' },
+  { key: 'products', label: 'Products' },
+  { key: 'addons', label: 'Add-ons' },
+  { key: 'challenge', label: 'Challenges & competitions' },
+  { key: 'game_features', label: 'Game features' },
+  { key: 'cby_ai_delivery', label: 'AI meal deliveries' },
+  { key: 'meal-components', label: 'Meal component templates' },
+  { key: 'orders', label: 'Orders' },
+  { key: 'subscription-packages', label: 'Subscription packages' },
+  { key: 'subscribers', label: 'Subscribers' },
+  { key: 'meal-preparations', label: 'Meal preparations' },
+  { key: 'health-reads', label: 'Health reads' },
+  { key: 'bracelet-products', label: 'Bracelet products' },
+];
+
+const CRM_MODULE_KEY_SET = new Set(CRM_ACCESS_MODULES.map((m) => m.key));
+
+/**
+ * @param {unknown} modules Firestore crmAllowedModules
+ * @returns {boolean}
+ */
+export function crmStaffHasFullAccess(modules) {
+  if (modules == null) return true;
+  if (!Array.isArray(modules)) return true;
+  if (modules.includes(CRM_ACCESS_MODULE_ALL)) return true;
+  return false;
+}
+
+/**
+ * @param {string[]} keys
+ * @param {boolean} fullAccess
+ * @returns {string[]|null} null means omit field (full legacy)
+ */
+export function buildCrmAllowedModulesForSave(keys, fullAccess) {
+  if (fullAccess) return [CRM_ACCESS_MODULE_ALL];
+  const merged = [...new Set(['dashboard', ...(keys || []).filter((k) => CRM_MODULE_KEY_SET.has(k))])];
+  return merged;
+}
+
 /** Daily attendance (one check-in / check-out per employee per Dubai calendar day). */
 export const CRM_ATTENDANCE_COLLECTION = 'crm_attendance';
 
