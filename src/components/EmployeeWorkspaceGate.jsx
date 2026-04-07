@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Navigate, useParams } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase/config';
+import { db, firebaseConfigError } from '../firebase/config';
 import {
   CRM_EMPLOYEES_COLLECTION,
   ROUTES,
@@ -22,6 +22,10 @@ export default function EmployeeWorkspaceGate({ children }) {
   });
 
   useEffect(() => {
+    if (firebaseConfigError || !db) {
+      setVerdict({ phase: 'config', redirectTo: null });
+      return;
+    }
     if (authLoading || !user) return;
 
     let cancelled = false;
@@ -84,7 +88,21 @@ export default function EmployeeWorkspaceGate({ children }) {
     return () => {
       cancelled = true;
     };
-  }, [authLoading, user, slugFromRoute]);
+  }, [authLoading, user, slugFromRoute, firebaseConfigError, db]);
+
+  if (verdict.phase === 'config') {
+    return (
+      <div className="loading-screen">
+        <p style={{ maxWidth: 420, textAlign: 'center', lineHeight: 1.5 }}>
+          Workspace can’t load: Firebase isn’t configured or Firestore failed to start. Set AWS Amplify env vars
+          (VITE_FIREBASE_*) and redeploy, or open the app from the home page once and try again.
+        </p>
+        {firebaseConfigError ? (
+          <p style={{ marginTop: 12, fontSize: 13, opacity: 0.85 }}>{firebaseConfigError}</p>
+        ) : null}
+      </div>
+    );
+  }
 
   if (authLoading || verdict.phase === 'loading') {
     return (

@@ -1,4 +1,6 @@
 # AWS Amplify — Vite SPA (`npm run build` → dist/).
+# Hosting → Rewrites: add SPA rule (200 → /index.html) per AWS “Redirects for SPA”
+# if opening /employee/... directly still 404s before this HTML ships.
 # Keep `next` in devDependencies so new apps are less likely to be classified as SSR.
 #
 # If deploy fails with: Can't find required-server-files.json — the Amplify *app*
@@ -15,6 +17,8 @@ frontend:
     build:
       commands:
         - npm run build
+        # Same HTML as SPA shell; helps some CDNs when deep paths fall through to 404.
+        - cp dist/index.html dist/404.html
   artifacts:
     baseDirectory: dist
     files:
