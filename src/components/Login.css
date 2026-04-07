@@ -50,6 +50,43 @@
   font-size: 0.8125rem;
 }
 
+.login-card--workspace {
+  border-color: #c7d2fe;
+  box-shadow: 0 4px 24px -4px rgba(59, 130, 246, 0.12);
+}
+
+.login-kicker {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #6366f1;
+  margin: 0 0 0.35rem 0;
+}
+
+.login-header--employee h1,
+.login-card--workspace .login-header h1 {
+  color: #1e1b4b;
+}
+
+.login-sub {
+  color: #475569;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.login-workspace-slug {
+  font-family: ui-monospace, monospace;
+  font-size: 0.78rem;
+  color: #4338ca;
+  font-weight: 600;
+}
+
+.login-hint--muted {
+  color: #94a3b8;
+}
+
 .form-group {
   display: flex;
   flex-direction: column;

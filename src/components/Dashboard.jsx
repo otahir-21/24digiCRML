@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { db } from '../firebase/config';
 import { useCollectionData } from '../hooks/useFirestore';
 import { useAuth } from '../context/AuthContext';
-import { ROUTES } from '../constants';
+import { ROUTES, employeePortalPath } from '../constants';
 import { CHALLENGE_COLLECTION_IDS } from '../constants';
 import DashboardHeader from './DashboardHeader';
 import DataTable from './DataTable';
@@ -16,6 +16,11 @@ import FoodCategoriesPanel from './FoodCategoriesPanel';
 import ProductsPanel from './ProductsPanel';
 import AddonsPanel from './AddonsPanel';
 import GameFeaturesPanel from './GameFeaturesPanel';
+import CByAiDeliveryPanel from './CByAiDeliveryPanel';
+import EmployeePortalPanel from './EmployeePortalPanel';
+import EmployeeAttendancePanel from './EmployeeAttendancePanel';
+import AttendanceAdminPanel from './AttendanceAdminPanel';
+import StaffEmployeesPanel from './StaffEmployeesPanel';
 import './Dashboard.css';
 
 // ─── Navigation sections ───────────────────────────────────────────────────
@@ -27,6 +32,10 @@ const SECTION = {
   ADDONS: 'addons',
   GAME_FEATURES: 'game_features',
   CHALLENGE: 'challenge',
+  CBY_AI_DELIVERY: 'cby_ai_delivery',
+  STAFF_EMPLOYEES: 'staff_employees',
+  EMPLOYEE_ATTENDANCE: 'employee_attendance',
+  ATTENDANCE_ADMIN: 'attendance_admin',
 };
 
 // 24Diet inner screens
@@ -96,7 +105,100 @@ const ICONS = {
       <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
     </svg>
   ),
+  attendance: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 6v6l4 2" />
+    </svg>
+  ),
 };
+
+/** Full owner/admin sidebar — used when not under /employee/:slug */
+function buildOwnerSidebarSections() {
+  return [
+    {
+      id: 'main',
+      label: '',
+      items: [
+        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, section: SECTION.DASHBOARD },
+        { id: 'users', label: 'Users', icon: ICONS.profile, section: SECTION.PROFILE },
+        {
+          id: 'create-admin',
+          label: 'Create Admin/Staff',
+          icon: ICONS.profile,
+          section: SECTION.STAFF_EMPLOYEES,
+          staffTab: 'create',
+        },
+        {
+          id: 'admin-users',
+          label: 'Admin Users',
+          icon: ICONS.profile,
+          section: SECTION.STAFF_EMPLOYEES,
+          staffTab: 'list',
+        },
+        {
+          id: 'attendance-admin',
+          label: 'Attendance',
+          icon: ICONS.attendance,
+          section: SECTION.ATTENDANCE_ADMIN,
+        },
+      ],
+    },
+    {
+      id: 'commerce',
+      label: '',
+      items: [
+        { id: 'food-categories', label: 'Food Categories', icon: ICONS.diet, section: SECTION.DIET },
+        { id: 'products', label: 'Products', icon: ICONS.diet, section: SECTION.PRODUCTS },
+        { id: 'addons', label: 'Add-ons', icon: ICONS.diet, section: SECTION.ADDONS },
+        { id: 'meal-components', label: 'Meal Component Templates', icon: ICONS.diet },
+        { id: 'orders', label: 'Orders', icon: ICONS.dashboard },
+        { id: 'challenges', label: 'Challenges', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'overview' },
+        { id: 'competitions', label: 'Competitions', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'competitions' },
+        { id: 'rooms', label: 'Rooms', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'rooms' },
+        { id: 'game-features', label: 'Game Features', icon: ICONS.challenge, section: SECTION.GAME_FEATURES },
+      ],
+    },
+    {
+      id: 'ai',
+      label: 'C BY AI',
+      items: [
+        { id: 'subscription-packages', label: 'Subscription Packages', icon: ICONS.diet },
+        { id: 'subscribers', label: 'Subscribers', icon: ICONS.profile },
+        { id: 'ai-meal-deliveries', label: 'AI Meal Deliveries', icon: ICONS.diet, section: SECTION.CBY_AI_DELIVERY },
+        { id: 'meal-preparations', label: 'Meal Preparations', icon: ICONS.diet },
+      ],
+    },
+    {
+      id: 'bracelet',
+      label: 'BRACELA HEALTH',
+      items: [
+        { id: 'health-reads', label: 'Health Reads', icon: ICONS.dashboard },
+      ],
+    },
+    {
+      id: 'bracelet-store',
+      label: 'BRACELET STORE',
+      items: [
+        { id: 'bracelet-products', label: 'Bracelet Products', icon: ICONS.dashboard },
+      ],
+    },
+  ];
+}
+
+/** Minimal sidebar for /employee/:slug — add Attendance etc. here later */
+function buildEmployeeSidebarSections() {
+  return [
+    {
+      id: 'employee',
+      label: 'Navigation',
+      items: [
+        { id: 'emp-home', label: 'Overview', icon: ICONS.dashboard, section: SECTION.DASHBOARD },
+        { id: 'emp-attendance', label: 'Attendance', icon: ICONS.attendance, section: SECTION.EMPLOYEE_ATTENDANCE },
+      ],
+    },
+  ];
+}
 
 // ─── Dashboard stats hook ──────────────────────────────────────────────────
 function useDashboardStats() {
@@ -317,66 +419,21 @@ function DietView() {
 
 
 // ─── Main Dashboard ────────────────────────────────────────────────────────
-export default function Dashboard() {
+export default function Dashboard({ employeeSlug = null }) {
   const [section, setSection] = useState(SECTION.DASHBOARD);
   const [challengeInitialTab, setChallengeInitialTab] = useState('overview');
+  const [staffInitialTab, setStaffInitialTab] = useState('create');
   const [setupHelpOpen, setSetupHelpOpen] = useState(false);
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
 
-  const sidebarSections = [
-    {
-      id: 'main',
-      label: '',
-      items: [
-        { id: 'dashboard', label: 'Dashboard', icon: ICONS.dashboard, section: SECTION.DASHBOARD },
-        { id: 'users', label: 'Users', icon: ICONS.profile, section: SECTION.PROFILE },
-        { id: 'create-admin', label: 'Create Admin/Staff', icon: ICONS.profile },
-        { id: 'admin-users', label: 'Admin Users', icon: ICONS.profile },
-      ],
-    },
-    {
-      id: 'commerce',
-      label: '',
-      items: [
-        { id: 'food-categories', label: 'Food Categories', icon: ICONS.diet, section: SECTION.DIET },
-        { id: 'products', label: 'Products', icon: ICONS.diet, section: SECTION.PRODUCTS },
-        { id: 'addons', label: 'Add-ons', icon: ICONS.diet, section: SECTION.ADDONS },
-        { id: 'meal-components', label: 'Meal Component Templates', icon: ICONS.diet },
-        { id: 'orders', label: 'Orders', icon: ICONS.dashboard },
-        { id: 'challenges', label: 'Challenges', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'overview' },
-        { id: 'competitions', label: 'Competitions', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'competitions' },
-        { id: 'rooms', label: 'Rooms', icon: ICONS.challenge, section: SECTION.CHALLENGE, challengeTab: 'rooms' },
-        { id: 'game-features', label: 'Game Features', icon: ICONS.challenge, section: SECTION.GAME_FEATURES },
-      ],
-    },
-    {
-      id: 'ai',
-      label: 'C BY AI',
-      items: [
-        { id: 'subscription-packages', label: 'Subscription Packages', icon: ICONS.diet },
-        { id: 'subscribers', label: 'Subscribers', icon: ICONS.profile },
-        { id: 'ai-meal-deliveries', label: 'AI Meal Deliveries', icon: ICONS.diet },
-        { id: 'meal-preparations', label: 'Meal Preparations', icon: ICONS.diet },
-      ],
-    },
-    {
-      id: 'bracelet',
-      label: 'BRACELA HEALTH',
-      items: [
-        { id: 'health-reads', label: 'Health Reads', icon: ICONS.dashboard },
-      ],
-    },
-    {
-      id: 'bracelet-store',
-      label: 'BRACELET STORE',
-      items: [
-        { id: 'bracelet-products', label: 'Bracelet Products', icon: ICONS.dashboard },
-      ],
-    },
-  ];
+  const sidebarSections = employeeSlug ? buildEmployeeSidebarSections() : buildOwnerSidebarSections();
 
   const activeMenuId = (() => {
+    if (employeeSlug) {
+      if (section === SECTION.EMPLOYEE_ATTENDANCE) return 'emp-attendance';
+      return 'emp-home';
+    }
     if (section === SECTION.DIET) return 'food-categories';
     if (section === SECTION.PRODUCTS) return 'products';
     if (section === SECTION.ADDONS) return 'addons';
@@ -385,6 +442,11 @@ export default function Dashboard() {
     if (section === SECTION.CHALLENGE && challengeInitialTab === 'competitions') return 'competitions';
     if (section === SECTION.CHALLENGE && challengeInitialTab === 'rooms') return 'rooms';
     if (section === SECTION.CHALLENGE) return 'challenges';
+    if (section === SECTION.CBY_AI_DELIVERY) return 'ai-meal-deliveries';
+    if (section === SECTION.STAFF_EMPLOYEES) {
+      return staffInitialTab === 'list' ? 'admin-users' : 'create-admin';
+    }
+    if (section === SECTION.ATTENDANCE_ADMIN) return 'attendance-admin';
     return 'dashboard';
   })();
 
@@ -394,24 +456,45 @@ export default function Dashboard() {
       if (item.section === SECTION.CHALLENGE) {
         setChallengeInitialTab(item.challengeTab || 'overview');
       }
+      if (item.section === SECTION.STAFF_EMPLOYEES) {
+        setStaffInitialTab(item.staffTab || 'create');
+      }
     }
   };
 
+  const isEmployeePortal = Boolean(employeeSlug);
+
   const handleSignOut = async () => {
     await signOut();
-    navigate(ROUTES.LOGIN);
+    if (isEmployeePortal) {
+      navigate(`${ROUTES.LOGIN}?next=${encodeURIComponent(employeePortalPath(employeeSlug))}`, {
+        replace: true,
+      });
+    } else {
+      navigate(ROUTES.LOGIN, { replace: true });
+    }
   };
 
   return (
-    <div className="dashboard">
-      <DashboardHeader />
+    <div className={`dashboard ${isEmployeePortal ? 'dashboard--employee' : ''}`}>
+      <DashboardHeader
+        variant={isEmployeePortal ? 'employee' : 'admin'}
+        employeeReturnPath={isEmployeePortal ? employeePortalPath(employeeSlug) : null}
+      />
 
       <main className="dashboard-main">
         {/* ── Sidebar ── */}
-        <aside className="sidebar">
+        <aside className={`sidebar ${isEmployeePortal ? 'sidebar--employee' : ''}`}>
           <div className="sidebar-brand">
             <span className="brand-logo">◈</span>
-            <span className="brand-name">Admin Panel</span>
+            <div className="sidebar-brand-text">
+              <span className="brand-name">{isEmployeePortal ? 'My workspace' : 'Admin Panel'}</span>
+              {isEmployeePortal && (
+                <div className="sidebar-employee-slug" title="Your workspace address">
+                  {user?.email ?? '—'}
+                </div>
+              )}
+            </div>
           </div>
 
           <nav className="sidebar-nav">
@@ -438,16 +521,22 @@ export default function Dashboard() {
 
           <div className="sidebar-footer">
             <div className="sidebar-user-meta">
-              <div className="sidebar-user-email">Logged in as:</div>
-              <div className="sidebar-user-value">{user?.email || 'admin@24digi.com'}</div>
-              <div className="sidebar-user-role">Admin</div>
+              <div className="sidebar-user-email">{isEmployeePortal ? 'Your account' : 'Logged in as'}</div>
+              <div className="sidebar-user-value">{user?.email ?? '—'}</div>
+              <div className={`sidebar-user-role ${isEmployeePortal ? 'sidebar-user-role--employee' : ''}`}>
+                {isEmployeePortal ? 'Employee' : 'Administrator'}
+              </div>
             </div>
-            <div className="sidebar-footer-actions">
-              <button type="button" className="setup-help-btn" onClick={() => setSetupHelpOpen(true)}>
-                Setup
-              </button>
+            <div
+              className={`sidebar-footer-actions${isEmployeePortal ? ' sidebar-footer-actions--single' : ''}`}
+            >
+              {!isEmployeePortal && (
+                <button type="button" className="setup-help-btn" onClick={() => setSetupHelpOpen(true)}>
+                  Setup
+                </button>
+              )}
               <button type="button" className="sidebar-logout-btn" onClick={handleSignOut}>
-                Logout
+                Sign out
               </button>
             </div>
           </div>
@@ -455,13 +544,22 @@ export default function Dashboard() {
 
         {/* ── Content ── */}
         <section className="content">
-          {section === SECTION.DASHBOARD && <DashboardOverview />}
-          {section === SECTION.PROFILE && <UsersAdminPanel />}
-          {section === SECTION.DIET && <DietView />}
-          {section === SECTION.PRODUCTS && <ProductsPanel />}
-          {section === SECTION.ADDONS && <AddonsPanel />}
-          {section === SECTION.GAME_FEATURES && <GameFeaturesPanel />}
-          {section === SECTION.CHALLENGE && <ChallengeSection initialTab={challengeInitialTab} />}
+          {section === SECTION.DASHBOARD && !employeeSlug && <DashboardOverview />}
+          {section === SECTION.DASHBOARD && employeeSlug && <EmployeePortalPanel slug={employeeSlug} />}
+          {employeeSlug && section === SECTION.EMPLOYEE_ATTENDANCE && (
+            <EmployeeAttendancePanel slug={employeeSlug} />
+          )}
+          {!employeeSlug && section === SECTION.PROFILE && <UsersAdminPanel />}
+          {!employeeSlug && section === SECTION.DIET && <DietView />}
+          {!employeeSlug && section === SECTION.PRODUCTS && <ProductsPanel />}
+          {!employeeSlug && section === SECTION.ADDONS && <AddonsPanel />}
+          {!employeeSlug && section === SECTION.GAME_FEATURES && <GameFeaturesPanel />}
+          {!employeeSlug && section === SECTION.CHALLENGE && <ChallengeSection initialTab={challengeInitialTab} />}
+          {!employeeSlug && section === SECTION.CBY_AI_DELIVERY && <CByAiDeliveryPanel />}
+          {!employeeSlug && section === SECTION.STAFF_EMPLOYEES && (
+            <StaffEmployeesPanel initialTab={staffInitialTab} />
+          )}
+          {!employeeSlug && section === SECTION.ATTENDANCE_ADMIN && <AttendanceAdminPanel />}
         </section>
       </main>
 

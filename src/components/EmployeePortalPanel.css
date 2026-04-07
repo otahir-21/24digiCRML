@@ -1,0 +1,126 @@
+.epp-root {
+  max-width: 640px;
+}
+
+.epp-hero {
+  margin-bottom: 1.35rem;
+}
+
+.epp-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: #0f172a;
+  margin: 0 0 0.45rem;
+  line-height: 1.2;
+}
+
+.epp-subtitle {
+  margin: 0;
+  font-size: 0.9375rem;
+  color: #64748b;
+  line-height: 1.55;
+  max-width: 36rem;
+}
+
+.epp-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1.35rem;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04);
+}
+
+.epp-h2 {
+  margin: 0 0 1rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #64748b;
+}
+
+.epp-dl {
+  display: grid;
+  grid-template-columns: minmax(100px, 130px) 1fr;
+  gap: 0.65rem 1rem;
+  margin: 0;
+  font-size: 0.875rem;
+}
+
+.epp-dl dt {
+  margin: 0;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.epp-dl dd {
+  margin: 0;
+  color: #0f172a;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.epp-dl dd .muted {
+  display: block;
+  margin-top: 0.35rem;
+  font-weight: 400;
+  font-size: 0.8125rem;
+  color: #94a3b8;
+  font-family: ui-monospace, monospace;
+}
+
+.epp-workspace-badge {
+  display: inline-block;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  background: #ecfdf5;
+  color: #047857;
+  border: 1px solid #a7f3d0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+}
+
+.epp-workspace-path {
+  display: block;
+  margin-top: 0.35rem;
+}
+
+.epp-dl--compact {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+}
+
+.epp-mono {
+  font-size: 0.75rem;
+  color: #475569;
+  word-break: break-all;
+}
+
+.epp-details {
+  margin-top: 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #f8fafc;
+  padding: 0 0.85rem;
+}
+
+.epp-details-summary {
+  padding: 0.75rem 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  user-select: none;
+}
+
+.epp-details[open] {
+  padding-bottom: 0.85rem;
+}
+
+.epp-details-hint {
+  margin: 0 0 0.5rem;
+  font-size: 0.75rem;
+  color: #94a3b8;
+  line-height: 1.4;
+}

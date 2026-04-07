@@ -25,25 +25,57 @@
 .header-left {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.5rem;
+  min-width: 0;
 }
 
-.welcome-text {
-  font-size: 0.8125rem;
+.header-product-lockup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding-right: 1.25rem;
+  border-right: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.header-product-name {
+  font-size: 1.0625rem;
+  font-weight: 700;
+  color: #0f172a;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.header-product-tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   color: #64748b;
 }
 
-.welcome-text::after {
-  content: ' · ';
-  color: #cbd5e1;
+.header-greeting {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
 }
 
-.dashboard-header h1 {
-  font-size: 1.125rem;
-  font-weight: 700;
-  margin: 0;
-  color: #0f172a;
-  letter-spacing: -0.02em;
+.header-greeting-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+}
+
+.header-greeting-name {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #334155;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .user-section {
@@ -55,7 +87,14 @@
 .user-info {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.55rem;
+}
+
+.user-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
 }
 
 .user-avatar {
@@ -73,7 +112,74 @@
 
 .user-email {
   font-size: 0.75rem;
-  color: #64748b;
+  color: #475569;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+.user-role-pill {
+  font-size: 0.625rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #1e40af;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  padding: 0.12rem 0.4rem;
+  border-radius: 4px;
+  align-self: flex-start;
+}
+
+.user-role-pill--employee {
+  color: #047857;
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+}
+
+.dashboard-header--employee {
+  border-bottom-color: #c7d2fe;
+  background: linear-gradient(180deg, #fff 0%, #fafbff 100%);
+}
+
+.dashboard-header--employee .header-product-name {
+  color: #312e81;
+}
+
+.dashboard-header--employee .header-product-tag {
+  color: #6366f1;
+}
+
+.dashboard-header--employee .user-avatar {
+  background: linear-gradient(145deg, #0d9488 0%, #0f766e 100%);
+}
+
+.dashboard--employee {
+  background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+}
+
+.sidebar--employee .brand-logo {
+  background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+}
+
+.sidebar-user-role--employee {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #99f6e4;
+  background: rgba(45, 212, 191, 0.15);
+  border: 1px solid rgba(45, 212, 191, 0.35);
+  padding: 0.18rem 0.45rem;
+  border-radius: 4px;
+}
+
+.sidebar-footer-actions--single {
+  grid-template-columns: 1fr;
 }
 
 .logout-btn {
@@ -91,6 +197,39 @@
 .logout-btn:hover {
   background: #e2e8f0;
   color: #0f172a;
+}
+
+@media (max-width: 720px) {
+  .dashboard-header {
+    flex-wrap: wrap;
+    height: auto;
+    padding: 0.65rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .header-left {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.6rem;
+    width: 100%;
+  }
+
+  .header-product-lockup {
+    border-right: none;
+    padding-right: 0;
+    padding-bottom: 0.55rem;
+    border-bottom: 1px solid #e2e8f0;
+    width: 100%;
+  }
+
+  .user-section {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .user-email {
+    max-width: 160px;
+  }
 }
 
 /* ========== Sidebar — dark theme ========== */
@@ -126,10 +265,27 @@
 }
 
 .brand-name {
-  font-size: 1.72rem;
-  font-weight: 700;
+  font-size: 0.9375rem;
+  font-weight: 600;
   color: #fff;
   letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.sidebar-brand-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.sidebar-employee-slug {
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  word-break: break-all;
+  line-height: 1.25;
 }
 
 .sidebar-nav {

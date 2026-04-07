@@ -1,0 +1,266 @@
+.cbd-root {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  max-width: 1200px;
+}
+
+.cbd-page-title {
+  font-size: 1.32rem;
+  font-weight: 700;
+  margin: 0;
+}
+
+.cbd-sub {
+  margin: 0;
+  font-size: 0.82rem;
+  color: #64748b;
+}
+
+.cbd-sub code {
+  font-size: 0.78rem;
+  background: #f1f5f9;
+  padding: 0.12rem 0.35rem;
+  border-radius: 4px;
+}
+
+.cbd-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+}
+
+.cbd-toolbar {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.cbd-search {
+  flex: 1;
+  min-width: 200px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.82rem;
+}
+
+.cbd-btn {
+  border: 1px solid #dbe1ea;
+  background: #fff;
+  color: #334155;
+  border-radius: 7px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.cbd-btn:hover {
+  background: #f8fafc;
+}
+
+.cbd-error {
+  border: 1px solid #fecaca;
+  background: #fef2f2;
+  color: #dc2626;
+  border-radius: 8px;
+  padding: 0.5rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.cbd-loading,
+.cbd-empty {
+  color: #64748b;
+  font-size: 0.85rem;
+  padding: 0.5rem 0;
+}
+
+.cbd-layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+
+.cbd-list {
+  flex: 0 0 260px;
+  max-height: calc(100vh - 220px);
+  overflow: auto;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 0.5rem 0;
+}
+
+.cbd-list-head {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #94a3b8;
+  padding: 0.35rem 0.75rem 0.5rem;
+}
+
+.cbd-list ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.cbd-list-item {
+  width: 100%;
+  text-align: left;
+  border: none;
+  background: transparent;
+  padding: 0.55rem 0.75rem;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border-left: 3px solid transparent;
+}
+
+.cbd-list-item:hover {
+  background: #f8fafc;
+}
+
+.cbd-list-item.active {
+  background: #eff6ff;
+  border-left-color: #2563eb;
+}
+
+.cbd-list-name {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cbd-list-meta {
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.cbd-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.cbd-h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.cbd-dl {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  gap: 0.35rem 0.75rem;
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.cbd-dl dt {
+  margin: 0;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.cbd-dl dd {
+  margin: 0;
+  color: #1e293b;
+  word-break: break-word;
+}
+
+.cbd-mono-wrap {
+  font-family: ui-monospace, monospace;
+  font-size: 0.74rem;
+}
+
+.cbd-link-btn {
+  display: inline-block;
+  background: #0f172a;
+  color: #fff !important;
+  text-decoration: none;
+  padding: 0.4rem 0.85rem;
+  border-radius: 7px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.cbd-link-btn:hover {
+  background: #1e293b;
+}
+
+.cbd-muted {
+  margin: 0;
+  color: #94a3b8;
+  font-size: 0.82rem;
+}
+
+.cbd-meals-card {
+  overflow: hidden;
+}
+
+.cbd-table-wrap {
+  overflow-x: auto;
+}
+
+.cbd-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.cbd-table th,
+.cbd-table td {
+  text-align: left;
+  padding: 0.45rem 0.5rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.cbd-table th {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.cbd-chip {
+  display: inline-block;
+  background: #f1f5f9;
+  color: #475569;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  text-transform: capitalize;
+}
+
+@media (max-width: 900px) {
+  .cbd-layout {
+    flex-direction: column;
+  }
+
+  .cbd-list {
+    flex: none;
+    width: 100%;
+    max-height: 220px;
+  }
+
+  .cbd-dl {
+    grid-template-columns: 1fr;
+  }
+
+  .cbd-dl dt {
+    margin-top: 0.35rem;
+  }
+
+  .cbd-dl dt:first-child {
+    margin-top: 0;
+  }
+}

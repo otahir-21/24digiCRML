@@ -3,6 +3,75 @@ export const ROUTES = {
   DASHBOARD: '/dashboard',
 };
 
+/** Employee portal URL: use a URL-safe slug (e.g. osama-tahir). */
+export function employeePortalPath(slug) {
+  const s = String(slug || '').trim();
+  if (!s) return '/employee';
+  return `/employee/${encodeURIComponent(s)}`;
+}
+
+/**
+ * Only allow internal post-login redirects (prevents open redirects via ?next=).
+ * @param {string | null | undefined} raw
+ * @returns {string}
+ */
+export function sanitizeLoginNext(raw) {
+  if (raw == null || typeof raw !== 'string') return '';
+  const noHash = raw.split('#')[0];
+  const [pathPart, queryPart] = noHash.split('?');
+  if (!pathPart.startsWith('/') || pathPart.startsWith('//') || pathPart.includes('://')) {
+    return '';
+  }
+  if (pathPart.startsWith('/employee/')) {
+    const slug = pathPart.slice('/employee/'.length);
+    if (!slug || slug.includes('/') || slug === '.' || slug === '..') return '';
+    return queryPart ? `${pathPart}?${queryPart}` : pathPart;
+  }
+  if (pathPart === ROUTES.DASHBOARD) {
+    return queryPart ? `${pathPart}?${queryPart}` : pathPart;
+  }
+  return '';
+}
+
+/**
+ * @param {string} path from sanitizeLoginNext
+ * @returns {string | null} decoded slug
+ */
+export function parseEmployeeSlugFromLoginNext(path) {
+  const safe = sanitizeLoginNext(path);
+  if (!safe.startsWith('/employee/')) return null;
+  const pathOnly = safe.split('?')[0];
+  const enc = pathOnly.slice('/employee/'.length);
+  if (!enc) return null;
+  try {
+    return decodeURIComponent(enc);
+  } catch {
+    return enc;
+  }
+}
+
+/** Firestore: staff / employees created from admin CRM (document id = Auth uid). */
+export const CRM_EMPLOYEES_COLLECTION = 'crm_employees';
+
+/** Daily attendance (one check-in / check-out per employee per Dubai calendar day). */
+export const CRM_ATTENDANCE_COLLECTION = 'crm_attendance';
+
+/** Shared CRM settings: doc ids under this collection (e.g. attendance rules). */
+export const CRM_SETTINGS_COLLECTION = 'crm_settings';
+
+export const CRM_ATTENDANCE_SETTINGS_DOC_ID = 'attendance';
+
+/** All attendance dates and “office open” times use this IANA zone (UAE). */
+export const ATTENDANCE_TIMEZONE_LABEL = 'Asia/Dubai';
+
+/**
+ * @param {string} uid
+ * @param {string} dateKey YYYY-MM-DD (Dubai calendar day)
+ */
+export function attendanceDocId(uid, dateKey) {
+  return `${uid}_${dateKey}`;
+}
+
 export const DEFAULT_COLLECTIONS = [
   'users',
   'contacts',

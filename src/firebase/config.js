@@ -1,6 +1,8 @@
-import { initializeApp } from 'firebase/app';
+import { initializeApp, getApp, getApps } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+
+const SECONDARY_APP_NAME = 'EmployeeCreator';
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY ?? '',
@@ -38,3 +40,15 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 export default app;
+
+/** Secondary Firebase app for createUserWithout signing out the admin (same project config). */
+function getSecondaryApp() {
+  if (!getApps().some((a) => a.name === SECONDARY_APP_NAME)) {
+    return initializeApp(firebaseConfig, SECONDARY_APP_NAME);
+  }
+  return getApp(SECONDARY_APP_NAME);
+}
+
+export function getSecondaryAuth() {
+  return getAuth(getSecondaryApp());
+}
