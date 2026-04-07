@@ -13,6 +13,20 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID ?? '',
 };
 
+function getConfigError(config) {
+  const missing = [];
+
+  if (!config.apiKey) missing.push('VITE_FIREBASE_API_KEY');
+  if (!config.authDomain) missing.push('VITE_FIREBASE_AUTH_DOMAIN');
+  if (!config.projectId) missing.push('VITE_FIREBASE_PROJECT_ID');
+  if (!config.storageBucket) missing.push('VITE_FIREBASE_STORAGE_BUCKET');
+  if (!config.messagingSenderId) missing.push('VITE_FIREBASE_MESSAGING_SENDER_ID');
+  if (!config.appId) missing.push('VITE_FIREBASE_APP_ID');
+
+  if (missing.length === 0) return '';
+  return `Firebase env missing: ${missing.join(', ')}`;
+}
+
 function validateFirebaseConfig(config) {
   const missing = [];
 
@@ -35,14 +49,32 @@ function validateFirebaseConfig(config) {
 }
 
 validateFirebaseConfig(firebaseConfig);
+export const firebaseConfigError = getConfigError(firebaseConfig);
 
-const app = initializeApp(firebaseConfig);
-export const auth = getAuth(app);
-export const db = getFirestore(app);
+let app = null;
+let auth = null;
+let db = null;
+
+if (!firebaseConfigError) {
+  try {
+    app = initializeApp(firebaseConfig);
+    auth = getAuth(app);
+    db = getFirestore(app);
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.error('Firebase initialization failed:', error);
+  }
+} else {
+  // eslint-disable-next-line no-console
+  console.error(firebaseConfigError);
+}
+
+export { auth, db };
 export default app;
 
 /** Secondary Firebase app for createUserWithout signing out the admin (same project config). */
 function getSecondaryApp() {
+  if (!app) return null;
   if (!getApps().some((a) => a.name === SECONDARY_APP_NAME)) {
     return initializeApp(firebaseConfig, SECONDARY_APP_NAME);
   }
@@ -50,5 +82,7 @@ function getSecondaryApp() {
 }
 
 export function getSecondaryAuth() {
-  return getAuth(getSecondaryApp());
+  const secondary = getSecondaryApp();
+  if (!secondary) return null;
+  return getAuth(secondary);
 }

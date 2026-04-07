@@ -13,6 +13,11 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return () => {};
+    }
+
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
@@ -21,11 +26,15 @@ export function AuthProvider({ children }) {
   }, []);
 
   const signIn = async (email, password) => {
+    if (!auth) {
+      throw new Error('Firebase is not configured. Add VITE_FIREBASE_* variables in Amplify and redeploy.');
+    }
     const userCredential = await signInWithEmailAndPassword(auth, email, password);
     return userCredential.user;
   };
 
   const signOut = async () => {
+    if (!auth) return;
     await firebaseSignOut(auth);
   };
 

@@ -8,7 +8,7 @@ import {
   sanitizeLoginNext,
   parseEmployeeSlugFromLoginNext,
 } from '../constants';
-import { db } from '../firebase/config';
+import { db, firebaseConfigError } from '../firebase/config';
 import { doc, getDoc } from 'firebase/firestore';
 import './Login.css';
 
@@ -75,11 +75,17 @@ export default function Login() {
     setLoading(true);
 
     try {
+      if (firebaseConfigError) {
+        throw new Error(`${firebaseConfigError}. Set env vars in Amplify -> App settings -> Environment variables.`);
+      }
+
       const signedInUser = await signIn(email, password);
-      const employeeSnap = await getDoc(doc(db, CRM_EMPLOYEES_COLLECTION, signedInUser.uid));
+      const employeeSnap = db
+        ? await getDoc(doc(db, CRM_EMPLOYEES_COLLECTION, signedInUser.uid))
+        : null;
       const nextParam = sanitizeLoginNext(searchParams.get('next'));
 
-      if (employeeSnap.exists()) {
+      if (employeeSnap?.exists()) {
         const employee = employeeSnap.data() || {};
         const isActive = employee.active !== false;
         const role = String(employee.role || '').toLowerCase();
