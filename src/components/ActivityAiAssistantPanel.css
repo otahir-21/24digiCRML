@@ -1,0 +1,164 @@
+.aia-root {
+  max-width: 720px;
+}
+
+.aia-title {
+  margin: 0 0 0.35rem;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.aia-sub {
+  margin: 0 0 1.25rem;
+  font-size: 0.88rem;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+.aia-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem 1.15rem;
+  background: #fff;
+  margin-bottom: 1rem;
+}
+
+.aia-card--accent {
+  border-color: #c4b5fd;
+  background: linear-gradient(135deg, #f5f3ff 0%, #faf5ff 100%);
+}
+
+.aia-card h3 {
+  margin: 0 0 0.65rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #4c1d95;
+}
+
+.aia-prediction-main {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: #1e1b4b;
+  margin: 0 0 0.35rem;
+}
+
+.aia-prediction-meta {
+  font-size: 0.8rem;
+  color: #5b21b6;
+  margin: 0 0 0.85rem;
+}
+
+.aia-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.aia-btn {
+  border-radius: 8px;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+}
+
+.aia-btn-primary {
+  background: #5b21b6;
+  border-color: #5b21b6;
+  color: #fff;
+}
+
+.aia-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.aia-form-grid {
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 520px) {
+  .aia-form-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.aia-field label {
+  display: block;
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 0.25rem;
+}
+
+.aia-field input,
+.aia-field select {
+  width: 100%;
+  padding: 0.45rem 0.55rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  font-size: 0.85rem;
+}
+
+.aia-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  color: #991b1b;
+  padding: 0.65rem 0.85rem;
+  border-radius: 8px;
+  font-size: 0.82rem;
+  margin-bottom: 1rem;
+}
+
+.aia-hint {
+  font-size: 0.76rem;
+  color: #64748b;
+  margin-top: 0.75rem;
+  line-height: 1.45;
+}
+
+.aia-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.aia-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.78rem;
+}
+
+.aia-table th,
+.aia-table td {
+  text-align: left;
+  padding: 0.4rem 0.45rem;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.aia-table th {
+  color: #64748b;
+  font-weight: 600;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.aia-badge {
+  display: inline-block;
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 0.12rem 0.4rem;
+  border-radius: 999px;
+  background: #e0e7ff;
+  color: #3730a3;
+}
+
+.aia-badge--sugg {
+  background: #ede9fe;
+  color: #5b21b6;
+}

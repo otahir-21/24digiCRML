@@ -77,6 +77,7 @@ export const CRM_ACCESS_MODULES = [
   { key: 'meal-preparations', label: 'Meal preparations' },
   { key: 'health-reads', label: 'Health reads' },
   { key: 'bracelet-products', label: 'Bracelet products' },
+  { key: 'activity_ai', label: 'AI activity assistant' },
 ];
 
 const CRM_MODULE_KEY_SET = new Set(CRM_ACCESS_MODULES.map((m) => m.key));
@@ -105,6 +106,9 @@ export function buildCrmAllowedModulesForSave(keys, fullAccess) {
 
 /** Daily attendance (one check-in / check-out per employee per Dubai calendar day). */
 export const CRM_ATTENDANCE_COLLECTION = 'crm_attendance';
+
+/** Manual / suggested activity picks for pattern-based “AI” assistant (Vite CRM). */
+export const CRM_ACTIVITY_SELECTION_LOG_COLLECTION = 'crm_activity_selections';
 
 /** Shared CRM settings: doc ids under this collection (e.g. attendance rules). */
 export const CRM_SETTINGS_COLLECTION = 'crm_settings';
@@ -175,6 +179,11 @@ export const FIRESTORE_MODULES = [
       'challenge_leaderboard',
       'challenge_activities',
     ],
+  },
+  {
+    id: 'activity_ai',
+    label: 'AI activity',
+    collections: ['crm_activity_selections'],
   },
   {
     id: 'shop',

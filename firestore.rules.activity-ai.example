@@ -1,0 +1,17 @@
+// Example rules for `crm_activity_selections` (merge into your real firestore.rules).
+// Authenticated users may read/write only their own rows; adjust admin read as needed.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /crm_activity_selections/{docId} {
+      allow read: if request.auth != null
+        && resource.data.uid == request.auth.uid;
+      allow create: if request.auth != null
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasAll(['uid', 'activityKey', 'source', 'createdAt']);
+      allow update, delete: if false;
+    }
+  }
+}

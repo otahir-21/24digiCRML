@@ -21,6 +21,7 @@ import EmployeePortalPanel from './EmployeePortalPanel';
 import EmployeeAttendancePanel from './EmployeeAttendancePanel';
 import AttendanceAdminPanel from './AttendanceAdminPanel';
 import StaffEmployeesPanel from './StaffEmployeesPanel';
+import ActivityAiAssistantPanel from './ActivityAiAssistantPanel';
 import { useCrmStaffAccess } from '../hooks/useCrmStaffAccess';
 import './Dashboard.css';
 
@@ -37,6 +38,7 @@ const SECTION = {
   STAFF_EMPLOYEES: 'staff_employees',
   EMPLOYEE_ATTENDANCE: 'employee_attendance',
   ATTENDANCE_ADMIN: 'attendance_admin',
+  ACTIVITY_AI: 'activity_ai',
 };
 
 // 24Diet inner screens
@@ -110,6 +112,12 @@ const ICONS = {
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
       <circle cx="12" cy="12" r="10" />
       <path d="M12 6v6l4 2" />
+    </svg>
+  ),
+  activityAi: (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <path d="M12 3l1.2 4.2L18 9l-4.8 1.8L12 15l-1.2-4.2L6 9l4.8-1.8L12 3z" />
+      <path d="M5 19l1-3M19 19l-1-3" strokeLinecap="round" />
     </svg>
   ),
 };
@@ -203,6 +211,13 @@ function buildOwnerSidebarSections() {
           section: SECTION.CBY_AI_DELIVERY,
           crmModule: 'cby_ai_delivery',
         },
+        {
+          id: 'ai-activity-assistant',
+          label: 'AI activity assistant',
+          icon: ICONS.activityAi,
+          section: SECTION.ACTIVITY_AI,
+          crmModule: 'activity_ai',
+        },
         { id: 'meal-preparations', label: 'Meal Preparations', icon: ICONS.diet, crmModule: 'meal-preparations' },
       ],
     },
@@ -254,6 +269,8 @@ function sectionToCrmModule(section) {
       return 'staff_employees';
     case SECTION.ATTENDANCE_ADMIN:
       return 'attendance_admin';
+    case SECTION.ACTIVITY_AI:
+      return 'activity_ai';
     default:
       return 'dashboard';
   }
@@ -573,6 +590,7 @@ export default function Dashboard({ employeeSlug = null }) {
       return staffInitialTab === 'list' ? 'admin-users' : 'create-admin';
     }
     if (section === SECTION.ATTENDANCE_ADMIN) return 'attendance-admin';
+    if (section === SECTION.ACTIVITY_AI) return 'ai-activity-assistant';
     return 'dashboard';
   })();
 
@@ -726,6 +744,11 @@ export default function Dashboard({ employeeSlug = null }) {
           {!employeeSlug && section === SECTION.ATTENDANCE_ADMIN && (
             <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="attendance_admin">
               <AttendanceAdminPanel />
+            </GuardedOwnerPanel>
+          )}
+          {!employeeSlug && section === SECTION.ACTIVITY_AI && (
+            <GuardedOwnerPanel canSee={canSee} accessLoading={accessLoading} moduleKey="activity_ai">
+              <ActivityAiAssistantPanel />
             </GuardedOwnerPanel>
           )}
         </section>
